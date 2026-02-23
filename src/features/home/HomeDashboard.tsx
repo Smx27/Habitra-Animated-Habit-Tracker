@@ -5,9 +5,8 @@ import { FlatList, type ListRenderItem, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { HabitCard } from '@/components/habit/HabitCard';
-import { Text } from '@/components/ui';
+import { FAB, Text } from '@/components/ui';
 import { useHabitActions } from '@/hooks/useHabitActions';
-import { FAB } from '@/components/ui';
 import { selectCompletedCount, selectCompletionPercent, selectHabits, useHabitStore } from '@/store/habitStore';
 import { useThemeTokens } from '@/theme';
 import type { Habit } from '@/types/habit';
@@ -26,9 +25,9 @@ const HabitListItem = memo(function HabitListItem({ habit, index, onCompleteHabi
   return (
     <HabitCard
       habit={habit}
-      isCompleted={habit.completedToday}
       index={index}
       onPress={onCompleteHabit}
+      onComplete={onCompleteHabit}
       onToggleCompletion={onCompleteHabit}
     />
   );
