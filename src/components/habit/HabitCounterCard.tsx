@@ -4,25 +4,21 @@ import { useHabitActions } from '@/hooks/useHabitActions';
 import { useThemeTokens } from '@/theme';
 
 type Props = {
-  completedToday: number;
+  completedCount: number;
+  completionPercent: number;
 };
 
-const DAILY_GOAL = 8;
-
-export function HabitCounterCard({ completedToday }: Props) {
-  const { handleCompleteHabit } = useHabitActions();
+export function HabitCounterCard({ completedCount, completionPercent }: Props) {
+  const { handleCompleteNextHabit } = useHabitActions();
   const { typography } = useThemeTokens();
-  const progress = completedToday / DAILY_GOAL;
 
   return (
     <Card className="items-center gap-4">
-      <Badge label={`🔥 ${completedToday} day streak`} />
+      <Badge label={`🔥 ${completedCount} completed`} />
       <Text className={typography.heading}>{HABIT_LABELS.appName}</Text>
-      <ProgressRing progress={progress} label="Daily goal" />
-      <Text muted>
-        Completed today: {completedToday}/{DAILY_GOAL}
-      </Text>
-      <Button className="mt-1 w-full" label={HABIT_LABELS.completeAction} onPress={handleCompleteHabit} />
+      <ProgressRing progress={completionPercent} label="Daily goal" />
+      <Text muted>Completed today: {completedCount}</Text>
+      <Button className="mt-1 w-full" label={HABIT_LABELS.completeAction} onPress={handleCompleteNextHabit} />
     </Card>
   );
 }

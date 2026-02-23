@@ -6,10 +6,10 @@ import { useThemeTokens } from '@/theme';
 import { cn } from '@/utils/cn';
 
 type HeaderSectionProps = {
-  completedToday: number;
+  completedCount: number;
 };
 
-export function HeaderSection({ completedToday }: HeaderSectionProps) {
+export function HeaderSection({ completedCount }: HeaderSectionProps) {
   const { color, radius, typography } = useThemeTokens();
 
   return (
@@ -18,7 +18,7 @@ export function HeaderSection({ completedToday }: HeaderSectionProps) {
         <Text className={cn(typography.caption, color.textMutedClass)}>Good morning</Text>
         <Text className={typography.heading}>Ready to make today count?</Text>
         <Text muted className={typography.body}>
-          You have completed {completedToday} habits today.
+          You have completed {completedCount} habits today.
         </Text>
       </View>
     </BlurView>
