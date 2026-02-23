@@ -1,4 +1,5 @@
 export const radius = {
-  card: 'rounded-2xl',
-  button: 'rounded-xl',
+  card: 'rounded-3xl',
+  button: 'rounded-3xl',
+  pill: 'rounded-full',
 } as const;
