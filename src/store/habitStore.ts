@@ -9,7 +9,7 @@ const initialState = {
 export const useHabitStore = create<HabitStore>((set) => ({
   ...initialState,
   incrementCompletedToday: () =>
-    set((state) => ({
+    set((state: HabitStore) => ({
       completedToday: state.completedToday + 1,
     })),
   resetCompletedToday: () => set(initialState),

@@ -6,9 +6,10 @@ import { HabitCounterCard } from '@/components/habit/HabitCounterCard';
 import { SuccessLottie } from '@/components/SuccessLottie';
 import { useHabitStore } from '@/store/habitStore';
 import { theme } from '@/theme';
+import type { HabitStore } from '@/types/habit';
 
 export default function HomeScreen() {
-  const completedToday = useHabitStore((state) => state.completedToday);
+  const completedToday = useHabitStore((state: HabitStore) => state.completedToday);
 
   return (
     <View className={`flex-1 items-center justify-center ${theme.color.background} ${theme.spacing.screenX}`}>
