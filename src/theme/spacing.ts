@@ -1,8 +1,15 @@
 export const spacing = {
+  xxs: 'p-1',
+  xs: 'p-2',
+  sm: 'p-3',
+  md: 'p-4',
+  lg: 'p-6',
+  xl: 'p-8',
   screenX: 'px-6',
-  cardPadding: 'p-5',
+  cardPadding: 'p-6',
   buttonX: 'px-4',
   buttonY: 'py-3',
   stackSm: 'gap-2',
   stackMd: 'gap-4',
+  stackLg: 'gap-6',
 } as const;
