@@ -1,6 +1,8 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
-import { FlatList, View } from 'react-native';
+import { memo, useCallback, useMemo } from 'react';
+import { FlatList, type ListRenderItem, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { HabitCard } from '@/components/habit/HabitCard';
 import { Text } from '@/components/ui';
@@ -8,10 +10,29 @@ import { useHabitActions } from '@/hooks/useHabitActions';
 import { FAB } from '@/components/ui';
 import { selectCompletedCount, selectCompletionPercent, selectHabits, useHabitStore } from '@/store/habitStore';
 import { useThemeTokens } from '@/theme';
+import type { Habit } from '@/types/habit';
 import { cn } from '@/utils/cn';
 
 import { HeaderSection } from './HeaderSection';
 import { ProgressSection } from './ProgressSection';
+
+type HabitListItemProps = {
+  habit: Habit;
+  index: number;
+  onCompleteHabit: (habitId: Habit['id']) => void;
+};
+
+const HabitListItem = memo(function HabitListItem({ habit, index, onCompleteHabit }: HabitListItemProps) {
+  return (
+    <HabitCard
+      habit={habit}
+      isCompleted={habit.completedToday}
+      index={index}
+      onPress={onCompleteHabit}
+      onToggleCompletion={onCompleteHabit}
+    />
+  );
+});
 
 export function HomeDashboard() {
   const completedCount = useHabitStore(selectCompletedCount);
@@ -19,11 +40,32 @@ export function HomeDashboard() {
   const habits = useHabitStore(selectHabits);
   const { handleCompleteHabit } = useHabitActions();
   const { color, spacing, scheme, typography } = useThemeTokens();
+  const insets = useSafeAreaInsets();
 
   const gradientColors =
     scheme === 'dark'
       ? (['#020617', '#1e1b4b', '#312e81'] as const)
       : (['#eef2ff', '#e0e7ff', '#dbeafe'] as const);
+
+  const handleCompleteHabitPress = useCallback(
+    (habitId: Habit['id']) => {
+      void handleCompleteHabit(habitId);
+    },
+    [handleCompleteHabit],
+  );
+
+  const renderHabitItem = useCallback<ListRenderItem<Habit>>(
+    ({ item, index }) => <HabitListItem habit={item} index={index} onCompleteHabit={handleCompleteHabitPress} />,
+    [handleCompleteHabitPress],
+  );
+
+  const contentContainerStyle = useMemo(
+    () => ({
+      paddingTop: insets.top + 16,
+      paddingBottom: insets.bottom + 112,
+    }),
+    [insets.bottom, insets.top],
+  );
 
   return (
     <View className="flex-1">
@@ -33,7 +75,13 @@ export function HomeDashboard() {
       <FlatList
         data={habits}
         keyExtractor={(habit) => habit.id}
-        contentContainerClassName={cn('gap-3 pb-28 pt-16', spacing.screenX)}
+        initialNumToRender={8}
+        windowSize={7}
+        removeClippedSubviews
+        maxToRenderPerBatch={8}
+        updateCellsBatchingPeriod={40}
+        contentContainerClassName={cn('gap-3', spacing.screenX)}
+        contentContainerStyle={contentContainerStyle}
         ListHeaderComponent={
           <View className="gap-5 pb-2">
             <HeaderSection completedCount={completedCount} />
@@ -41,19 +89,7 @@ export function HomeDashboard() {
             <Text className={typography.subheading}>Habit List</Text>
           </View>
         }
-        renderItem={({ item, index }) => (
-          <HabitCard
-            habit={item}
-            isCompleted={item.completedToday}
-            index={index}
-            onPress={(habitId) => {
-              void handleCompleteHabit(habitId);
-            }}
-            onToggleCompletion={(habitId) => {
-              void handleCompleteHabit(habitId);
-            }}
-          />
-        )}
+        renderItem={renderHabitItem}
       />
 
       <FAB accessibilityLabel="Create habit" />
