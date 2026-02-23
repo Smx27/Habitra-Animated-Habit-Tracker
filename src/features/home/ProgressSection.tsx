@@ -7,15 +7,13 @@ import { useThemeTokens } from '@/theme';
 import { cn } from '@/utils/cn';
 
 type ProgressSectionProps = {
-  completedToday: number;
+  completedCount: number;
+  completionPercent: number;
 };
 
-const DAILY_GOAL = 8;
-
-export function ProgressSection({ completedToday }: ProgressSectionProps) {
+export function ProgressSection({ completedCount, completionPercent }: ProgressSectionProps) {
   const { radius, typography, color } = useThemeTokens();
-  const { handleCompleteHabit } = useHabitActions();
-  const progress = Math.min(completedToday / DAILY_GOAL, 1);
+  const { handleCompleteNextHabit } = useHabitActions();
 
   return (
     <BlurView intensity={30} tint="default" className={cn('overflow-hidden border border-white/20 p-5', radius.card, color.surfaceClass)}>
@@ -23,13 +21,13 @@ export function ProgressSection({ completedToday }: ProgressSectionProps) {
         <View className="gap-1">
           <Text className={typography.subheading}>Progress</Text>
           <Text muted>
-            {completedToday}/{DAILY_GOAL} habits completed
+            {completedCount} habits completed
           </Text>
         </View>
         <View className={cn('h-3 overflow-hidden', radius.pill, color.backgroundClass)}>
-          <View className={cn('h-full', color.actionPrimaryClass)} style={{ width: `${Math.max(progress * 100, 6)}%` }} />
+          <View className={cn('h-full', color.actionPrimaryClass)} style={{ width: `${Math.max(completionPercent * 100, 6)}%` }} />
         </View>
-        <Button label="Mark one done" onPress={handleCompleteHabit} />
+        <Button label="Mark one done" onPress={handleCompleteNextHabit} />
       </View>
     </BlurView>
   );
