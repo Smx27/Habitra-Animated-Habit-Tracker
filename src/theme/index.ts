@@ -1,19 +1,7 @@
-export const theme = {
-  color: {
-    background: 'bg-slate-900',
-    cardBackground: 'bg-slate-950/70',
-    textPrimary: 'text-slate-50',
-    textMuted: 'text-slate-300',
-    actionPrimary: 'bg-emerald-500',
-    actionPrimaryText: 'text-slate-950',
-  },
-  radius: {
-    card: 'rounded-2xl',
-    button: 'rounded-xl',
-  },
-  spacing: {
-    screenX: 'px-6',
-  },
-} as const;
-
-export type Theme = typeof theme;
+export { darkPalette, lightPalette } from '@/theme/palettes';
+export { radius } from '@/theme/radius';
+export { semanticColors, palettesByScheme, type ColorScheme } from '@/theme/semanticColors';
+export { shadows } from '@/theme/shadows';
+export { spacing } from '@/theme/spacing';
+export { ThemeProvider, useThemeTokens } from '@/theme/provider';
+export { typography } from '@/theme/typography';
