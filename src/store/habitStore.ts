@@ -1,13 +1,45 @@
 import { create } from 'zustand';
 
 import type { Habit, HabitStore } from '@/types/habit';
-import { getCompletedCount, getCompletionPercent } from '@/types/habit';
+import { getCompletedCount, getCompletionPercent, HABIT_CATEGORY_COLORS } from '@/types/habit';
 
 const initialHabits: Habit[] = [
-  { id: 'morning-stretch', title: 'Morning stretch', icon: '🧘', color: '#8b5cf6', completedToday: true },
-  { id: 'drink-water', title: 'Drink water', icon: '💧', color: '#06b6d4', completedToday: false },
-  { id: 'read-10-minutes', title: 'Read 10 minutes', icon: '📚', color: '#f59e0b', completedToday: false },
-  { id: 'evening-review', title: 'Evening review', icon: '🌙', color: '#22c55e', completedToday: true },
+  {
+    id: 'morning-stretch',
+    title: 'Morning stretch',
+    icon: '🧘',
+    category: 'mindfulness',
+    streak: 6,
+    accentColor: HABIT_CATEGORY_COLORS.mindfulness.accent,
+    completedToday: true,
+  },
+  {
+    id: 'drink-water',
+    title: 'Drink water',
+    icon: '💧',
+    category: 'wellness',
+    streak: 4,
+    accentColor: HABIT_CATEGORY_COLORS.wellness.accent,
+    completedToday: false,
+  },
+  {
+    id: 'read-10-minutes',
+    title: 'Read 10 minutes',
+    icon: '📚',
+    category: 'learning',
+    streak: 12,
+    accentColor: HABIT_CATEGORY_COLORS.learning.accent,
+    completedToday: false,
+  },
+  {
+    id: 'evening-review',
+    title: 'Evening review',
+    icon: '🌙',
+    category: 'productivity',
+    streak: 8,
+    accentColor: HABIT_CATEGORY_COLORS.productivity.accent,
+    completedToday: true,
+  },
 ];
 
 const initialState = {
@@ -30,7 +62,9 @@ export const useHabitStore = create<HabitStore>((set) => ({
           id: `habit-${Date.now()}`,
           title: payload.title,
           icon: payload.icon,
-          color: payload.color,
+          category: payload.category,
+          streak: 0,
+          accentColor: payload.accentColor ?? HABIT_CATEGORY_COLORS[payload.category].accent,
           completedToday: false,
         },
       ],
