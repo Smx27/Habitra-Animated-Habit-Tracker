@@ -1,15 +1,16 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { FlatList, type ListRenderItem, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { HabitCard } from '@/components/habit/HabitCard';
 import { FAB, Text } from '@/components/ui';
+import { AddHabitModal } from '@/features/habits/AddHabitModal';
 import { useHabitActions } from '@/hooks/useHabitActions';
 import { selectCompletedCount, selectCompletionPercent, selectHabits, useHabitStore } from '@/store/habitStore';
 import { useThemeTokens } from '@/theme';
-import type { Habit } from '@/types/habit';
+import type { AddHabitPayload, Habit } from '@/types/habit';
 import { cn } from '@/utils/cn';
 
 import { HeaderSection } from './HeaderSection';
@@ -37,9 +38,11 @@ export function HomeDashboard() {
   const completedCount = useHabitStore(selectCompletedCount);
   const completionPercent = useHabitStore(selectCompletionPercent);
   const habits = useHabitStore(selectHabits);
+  const addHabit = useHabitStore((state) => state.addHabit);
   const { handleCompleteHabit } = useHabitActions();
   const { color, spacing, scheme, typography } = useThemeTokens();
   const insets = useSafeAreaInsets();
+  const [isAddHabitOpen, setAddHabitOpen] = useState(false);
 
   const gradientColors =
     scheme === 'dark'
@@ -64,6 +67,13 @@ export function HomeDashboard() {
       paddingBottom: insets.bottom + 112,
     }),
     [insets.bottom, insets.top],
+  );
+
+  const handleSaveHabit = useCallback(
+    (payload: AddHabitPayload) => {
+      addHabit(payload);
+    },
+    [addHabit],
   );
 
   return (
@@ -91,7 +101,9 @@ export function HomeDashboard() {
         renderItem={renderHabitItem}
       />
 
-      <FAB accessibilityLabel="Create habit" />
+      <FAB accessibilityLabel="Create habit" onPress={() => setAddHabitOpen(true)} />
+
+      <AddHabitModal visible={isAddHabitOpen} onClose={() => setAddHabitOpen(false)} onSave={handleSaveHabit} />
     </View>
   );
 }
