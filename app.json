@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "Habitra Animated Habit Tracker",
+    "slug": "habitra-animated-habit-tracker",
+    "scheme": "habitra",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {},
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": [
+      "expo-router"
+    ]
+  }
+}
