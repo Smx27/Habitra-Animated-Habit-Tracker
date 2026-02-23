@@ -1,6 +1,7 @@
 import { BlurView } from 'expo-blur';
 import { View } from 'react-native';
 
+import { AnimatedProgressRing } from '@/components/habit/AnimatedProgressRing';
 import { Button, Text } from '@/components/ui';
 import { useHabitActions } from '@/hooks/useHabitActions';
 import { useThemeTokens } from '@/theme';
@@ -24,8 +25,8 @@ export function ProgressSection({ completedCount, completionPercent }: ProgressS
             {completedCount} habits completed
           </Text>
         </View>
-        <View className={cn('h-3 overflow-hidden', radius.pill, color.backgroundClass)}>
-          <View className={cn('h-full', color.actionPrimaryClass)} style={{ width: `${Math.max(completionPercent * 100, 6)}%` }} />
+        <View className="items-center">
+          <AnimatedProgressRing completionPercent={completionPercent} label="Daily goal" size={132} strokeWidth={11} duration={1000} />
         </View>
         <Button label="Mark one done" onPress={handleCompleteNextHabit} />
       </View>
