@@ -1,5 +1,6 @@
 import { Text as RNText, type TextProps } from 'react-native';
 
+import { useThemeTokens } from '@/theme';
 import { cn } from '@/utils/cn';
 
 type Props = TextProps & {
@@ -7,5 +8,12 @@ type Props = TextProps & {
 };
 
 export function Text({ className, muted = false, ...props }: Props) {
-  return <RNText className={cn(muted ? 'text-slate-300' : 'text-slate-50', className)} {...props} />;
+  const { color, typography } = useThemeTokens();
+
+  return (
+    <RNText
+      className={cn(muted ? color.textMutedClass : color.textPrimaryClass, typography.body, className)}
+      {...props}
+    />
+  );
 }

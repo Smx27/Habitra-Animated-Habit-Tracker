@@ -1,6 +1,7 @@
 import { Pressable, type PressableProps } from 'react-native';
 
 import { Text } from '@/components/ui/Text';
+import { useThemeTokens } from '@/theme';
 import { cn } from '@/utils/cn';
 
 type Props = PressableProps & {
@@ -8,9 +9,14 @@ type Props = PressableProps & {
 };
 
 export function Button({ className, label, ...props }: Props) {
+  const { color, radius, spacing, typography, shadows } = useThemeTokens();
+
   return (
-    <Pressable className={cn('rounded-xl bg-emerald-500 px-4 py-3', className)} {...props}>
-      <Text className="text-center font-semibold text-slate-950">{label}</Text>
+    <Pressable
+      className={cn(radius.button, color.actionPrimaryClass, spacing.buttonX, spacing.buttonY, shadows.floating, className)}
+      {...props}
+    >
+      <Text className={cn('text-center', color.actionPrimaryTextClass, typography.button)}>{label}</Text>
     </Pressable>
   );
 }
