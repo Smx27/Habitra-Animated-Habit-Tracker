@@ -11,7 +11,7 @@ import { HabitCardSkeleton } from '@/components/habit/HabitCardSkeleton';
 import { FAB } from '@/components/ui';
 import { AddHabitModal } from '@/features/habits/AddHabitModal';
 import { useHabitActions } from '@/hooks/useHabitActions';
-import { selectCompletedCount, selectCompletionPercent, selectHabits, useHabitStore } from '@/store/habitStore';
+import { selectDailyProgress, selectHabits, useHabitStore } from '@/store/habitStore';
 import { useThemeTokens } from '@/theme';
 import type { AddHabitPayload, Habit } from '@/types/habit';
 import { cn } from '@/utils/cn';
@@ -59,8 +59,8 @@ const HabitListItem = memo(function HabitListItem({
 });
 
 export function HomeDashboard() {
-  const completedCount = useHabitStore(selectCompletedCount);
-  const completionPercent = useHabitStore(selectCompletionPercent);
+  const dailyProgress = useHabitStore(selectDailyProgress);
+  const { completed: completedCount, percent: completionPercent } = dailyProgress;
   const habits = useHabitStore(selectHabits);
   const addHabit = useHabitStore((state) => state.addHabit);
   const { handleCompleteHabit } = useHabitActions();

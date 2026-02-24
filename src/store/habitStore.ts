@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import type { Habit, HabitCompletionTransition, HabitStore } from '@/types/habit';
-import { getCompletedCount, getCompletionPercent } from '@/types/habit';
+import { getDailyProgress as computeDailyProgress } from '@/types/habit';
 
 const HABIT_STORE_VERSION = 1;
 const HABIT_STORE_KEY = 'habitra-habits-v1';
@@ -111,6 +111,8 @@ export const useHabitStore = create<HabitStore>()(
             },
           ],
         })),
+      getDailyProgress: (date?: string): { completed: number; total: number; percent: number } =>
+        computeDailyProgress(useHabitStore.getState().habits, date),
       reorderHabits: (fromIndex, toIndex) =>
         set((state: HabitStore) => {
           if (
@@ -146,5 +148,6 @@ export const useHabitStore = create<HabitStore>()(
 );
 
 export const selectHabits = (state: HabitStore) => state.habits;
-export const selectCompletedCount = (state: HabitStore) => getCompletedCount(state.habits);
-export const selectCompletionPercent = (state: HabitStore) => getCompletionPercent(state.habits);
+export const selectDailyProgress = (state: HabitStore) => state.getDailyProgress();
+export const selectCompletedCount = (state: HabitStore) => selectDailyProgress(state).completed;
+export const selectCompletionPercent = (state: HabitStore) => selectDailyProgress(state).percent;

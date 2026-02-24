@@ -18,6 +18,7 @@ export type HabitState = {
 export type HabitActions = {
   toggleHabitCompletion: (id: Habit['id']) => HabitCompletionTransition | null;
   addHabit: (payload: AddHabitPayload) => void;
+  getDailyProgress: (date?: string) => { completed: number; total: number; percent: number };
   reorderHabits: (fromIndex: number, toIndex: number) => void;
   resetHabits: () => void;
 };
@@ -43,4 +44,19 @@ export function getCompletionPercent(habits: Habit[]): number {
   }
 
   return getCompletedCount(habits) / habits.length;
+}
+
+export function getDailyProgress(habits: Habit[], date = new Date().toISOString().split('T')[0]): {
+  completed: number;
+  total: number;
+  percent: number;
+} {
+  const total = habits.length;
+  const completed = habits.filter((habit) => habit.completedDates.includes(date)).length;
+
+  return {
+    completed,
+    total,
+    percent: total === 0 ? 0 : completed / total,
+  };
 }
