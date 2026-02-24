@@ -28,6 +28,7 @@ import { useThemeTokens } from '@/theme';
 import { cn } from '@/utils/cn';
 
 export interface HabitCardProps {
+  onCompletionTransition?: (habitId: Habit['id']) => void;
   habit: Pick<Habit, 'id' | 'title' | 'icon' | 'category' | 'streak' | 'completedToday' | 'accentColor'>;
   onPress: (habitId: Habit['id']) => void;
   onComplete: (habitId: Habit['id']) => void | Promise<void>;
@@ -45,7 +46,16 @@ const categoryLabelMap: Record<HabitCategory, string> = {
   wellness: 'Wellness',
 };
 
-function HabitCardComponent({ habit, onPress, onComplete, onToggleCompletion, disabled = false, testID, index = 0 }: HabitCardProps) {
+function HabitCardComponent({
+  habit,
+  onPress,
+  onComplete,
+  onToggleCompletion,
+  onCompletionTransition,
+  disabled = false,
+  testID,
+  index = 0,
+}: HabitCardProps) {
   const { color, radius, shadows, spacing, scheme, typography } = useThemeTokens();
   const [cardWidth, setCardWidth] = useState(1);
   const completionTriggeredRef = useRef(false);
@@ -73,8 +83,9 @@ function HabitCardComponent({ habit, onPress, onComplete, onToggleCompletion, di
     completionTriggeredRef.current = true;
     completionProgress.value = withSpring(1, COMPLETION_SPRING_CONFIG);
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    onCompletionTransition?.(habit.id);
     void onComplete(habit.id);
-  }, [completionProgress, habit.completedToday, habit.id, onComplete]);
+  }, [completionProgress, habit.completedToday, habit.id, onComplete, onCompletionTransition]);
 
   const handlePressIn = useCallback(() => {
     pressScale.value = withSpring(PRESS_SCALE_ACTIVE, PRESS_SPRING_CONFIG);
