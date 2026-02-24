@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ComponentType } from 'react';
 import { StyleSheet, View } from 'react-native';
-import LottieView from 'lottie-react-native';
 
 export interface CompletionConfettiProps {
   visible: boolean;
@@ -10,6 +9,7 @@ export interface CompletionConfettiProps {
 
 export function CompletionConfetti({ visible, playKey, onAnimationFinish }: CompletionConfettiProps) {
   const [isMounted, setIsMounted] = useState(visible);
+  const [LottieView, setLottieView] = useState<ComponentType<any> | null>(null);
 
   useEffect(() => {
     if (visible) {
@@ -17,9 +17,27 @@ export function CompletionConfetti({ visible, playKey, onAnimationFinish }: Comp
     }
   }, [visible, playKey]);
 
+  useEffect(() => {
+    if (!isMounted || LottieView) {
+      return;
+    }
+
+    let mounted = true;
+
+    void import('lottie-react-native').then((module) => {
+      if (mounted) {
+        setLottieView(() => module.default as ComponentType<any>);
+      }
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, [isMounted, LottieView]);
+
   const lottieKey = useMemo(() => `completion-confetti-${playKey}`, [playKey]);
 
-  if (!isMounted) {
+  if (!isMounted || !LottieView) {
     return null;
   }
 

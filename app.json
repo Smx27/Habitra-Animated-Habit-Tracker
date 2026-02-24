@@ -6,6 +6,15 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
+    "jsEngine": "hermes",
+    "assetBundlePatterns": ["**/*"],
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#0b1120"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
     "ios": {
       "supportsTablet": true
     },
@@ -14,9 +23,6 @@
       "bundler": "metro",
       "output": "static"
     },
-    "plugins": [
-      "expo-router"
-    ],
-    "jsEngine": "hermes"
+    "plugins": ["expo-router"]
   }
 }
