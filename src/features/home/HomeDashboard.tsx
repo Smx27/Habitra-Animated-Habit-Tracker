@@ -21,10 +21,14 @@ import { ProgressSection } from './ProgressSection';
 
 type HabitListItemProps = {
   habit: Habit;
+  completedToday: boolean;
+  streak: number;
   index: number;
   onCompleteHabit: (habitId: Habit['id']) => void;
   onCompletionTransition: (habitId: Habit['id']) => void;
 };
+
+const getTodayISODate = () => new Date().toISOString().split('T')[0];
 
 const HYDRATE_WINDOW_MS = 550;
 const SKELETON_CARD_COUNT = 5;
@@ -34,6 +38,8 @@ const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
 const HabitListItem = memo(function HabitListItem({
   habit,
+  completedToday,
+  streak,
   index,
   onCompleteHabit,
   onCompletionTransition,
@@ -42,6 +48,8 @@ const HabitListItem = memo(function HabitListItem({
     <HabitCard
       habit={habit}
       index={index}
+      completedToday={completedToday}
+      streak={streak}
       onPress={onCompleteHabit}
       onComplete={onCompleteHabit}
       onToggleCompletion={onCompleteHabit}
@@ -115,14 +123,22 @@ export function HomeDashboard() {
   }, []);
 
   const renderHabitItem = useCallback<ListRenderItem<Habit>>(
-    ({ item, index }) => (
-      <HabitListItem
-        habit={item}
-        index={index}
-        onCompleteHabit={handleCompleteHabitPress}
-        onCompletionTransition={handleCompletionTransition}
-      />
-    ),
+    ({ item, index }) => {
+      const today = getTodayISODate();
+      const completedToday = item.completedDates.includes(today);
+      const streak = item.completedDates.length;
+
+      return (
+        <HabitListItem
+          habit={item}
+          completedToday={completedToday}
+          streak={streak}
+          index={index}
+          onCompleteHabit={handleCompleteHabitPress}
+          onCompletionTransition={handleCompletionTransition}
+        />
+      );
+    },
     [handleCompleteHabitPress, handleCompletionTransition],
   );
 

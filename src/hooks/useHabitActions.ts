@@ -25,7 +25,8 @@ export function useHabitActions() {
   };
 
   const handleCompleteNextHabit = async () => {
-    const nextIncompleteHabit = habits.find((habit) => !habit.completedToday) ?? habits[0];
+    const today = new Date().toISOString().split('T')[0];
+    const nextIncompleteHabit = habits.find((habit) => !habit.completedDates.includes(today)) ?? habits[0];
 
     if (!nextIncompleteHabit) {
       return null;
