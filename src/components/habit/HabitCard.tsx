@@ -12,6 +12,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 
+import { AnimatedCounter } from '@/components/animations/AnimatedCounter';
 import { Text } from '@/components/ui';
 import {
   COMPLETION_SPRING_CONFIG,
@@ -187,8 +188,9 @@ function HabitCardComponent({
                     <View className="flex-1 gap-1">
                       <View className="flex-row items-center gap-2">
                         <Text className={cn(typography.body, habit.completedToday ? 'text-emerald-300' : undefined)}>{habit.title}</Text>
-                        <View className={cn('rounded-full bg-black/15 px-2 py-0.5')}>
-                          <Text className="text-xs text-amber-200">🔥 {habit.streak}</Text>
+                        <View className={cn('flex-row items-center rounded-full bg-black/15 px-2 py-0.5')}>
+                          <Text className="text-xs text-amber-200">🔥 </Text>
+                          <AnimatedCounter value={habit.streak} className="text-xs text-amber-200" />
                         </View>
                       </View>
 
