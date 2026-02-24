@@ -10,6 +10,7 @@ import { HabitCard } from '@/components/habit/HabitCard';
 import { HabitCardSkeleton } from '@/components/habit/HabitCardSkeleton';
 import { FAB } from '@/components/ui';
 import { AddHabitModal } from '@/features/habits/AddHabitModal';
+import { calculateCurrentStreak, isCompletedOnDate } from '@/features/habits/utils/streak';
 import { useHabitActions } from '@/hooks/useHabitActions';
 import { selectDailyProgress, selectHabits, useHabitStore } from '@/store/habitStore';
 import { useThemeTokens } from '@/theme';
@@ -125,8 +126,8 @@ export function HomeDashboard() {
   const renderHabitItem = useCallback<ListRenderItem<Habit>>(
     ({ item, index }) => {
       const today = getTodayISODate();
-      const completedToday = item.completedDates.includes(today);
-      const streak = item.completedDates.length;
+      const completedToday = isCompletedOnDate(item, today);
+      const streak = calculateCurrentStreak(item.completedDates, today);
 
       return (
         <HabitListItem

@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
+import { calculateCurrentStreak, isCompletedOnDate, toggleCompletionForDate } from '@/features/habits/utils/streak';
 import type { Habit, HabitCompletionTransition, HabitStore } from '@/types/habit';
 import { getDailyProgress as computeDailyProgress } from '@/types/habit';
 
@@ -76,24 +77,22 @@ export const useHabitStore = create<HabitStore>()(
         }
 
         const today = getTodayISODate();
-        const wasCompletedToday = targetHabit.completedDates.includes(today);
-        const previousStreak = targetHabit.completedDates.length;
-        const isCompletedToday = !wasCompletedToday;
-
-        const nextCompletedDates = isCompletedToday
-          ? [...targetHabit.completedDates, today]
-          : targetHabit.completedDates.filter((date) => date !== today);
+        const wasCompletedToday = isCompletedOnDate(targetHabit, today);
+        const previousStreak = calculateCurrentStreak(targetHabit.completedDates, today);
+        const updatedHabit = toggleCompletionForDate(targetHabit, today);
+        const isCompletedToday = isCompletedOnDate(updatedHabit, today);
+        const newStreak = calculateCurrentStreak(updatedHabit.completedDates, today);
 
         const transition: HabitCompletionTransition = {
           habitId: id,
           wasCompletedToday,
           isCompletedToday,
           previousStreak,
-          newStreak: nextCompletedDates.length,
+          newStreak,
         };
 
         set((state: HabitStore) => ({
-          habits: state.habits.map((habit) => (habit.id === id ? { ...habit, completedDates: nextCompletedDates } : habit)),
+          habits: state.habits.map((habit) => (habit.id === id ? { ...habit, completedDates: updatedHabit.completedDates } : habit)),
         }));
 
         return transition;

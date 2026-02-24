@@ -1,6 +1,7 @@
 import { View } from 'react-native';
 
 import { HabitCard } from '@/components/habit/HabitCard';
+import { calculateCurrentStreak, isCompletedOnDate } from '@/features/habits/utils/streak';
 import { Text } from '@/components/ui';
 import { useHabitActions } from '@/hooks/useHabitActions';
 import { selectHabits, useHabitStore } from '@/store/habitStore';
@@ -16,7 +17,7 @@ export function HabitListSection() {
     void handleCompleteHabit(habitId);
   };
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date();
 
   return (
     <View className="gap-3">
@@ -25,8 +26,8 @@ export function HabitListSection() {
         <HabitCard
           key={habit.id}
           habit={habit}
-          completedToday={habit.completedDates.includes(today)}
-          streak={habit.completedDates.length}
+          completedToday={isCompletedOnDate(habit, today)}
+          streak={calculateCurrentStreak(habit.completedDates, today)}
           index={index}
           onPress={handleHabitPress}
           onComplete={handleHabitPress}
