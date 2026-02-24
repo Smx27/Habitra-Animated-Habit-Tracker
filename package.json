@@ -23,7 +23,7 @@
     "react": "latest",
     "react-native": "latest",
     "react-native-gesture-handler": "^2.30.0",
-    "react-native-reanimated": "^4.2.2",
+    "react-native-reanimated": "^3.17.4",
     "react-native-safe-area-context": "latest",
     "react-native-screens": "latest",
     "react-native-svg": "^15.15.3",

@@ -107,6 +107,11 @@ Habitra uses a token-first theme model:
 
 ## Development Guidelines
 
+### Engineering constraints
+
+- `react-native-reanimated` is intentionally pinned to **major v3** to match current product constraints.
+- Avoid introducing APIs that are only available in Reanimated v4+ unless product constraints are explicitly updated.
+
 ### 1) Component patterns
 
 - Use small composable primitives in `components/ui`, then build feature-level components in `components/<feature>`.
