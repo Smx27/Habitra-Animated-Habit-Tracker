@@ -5,7 +5,7 @@ export function SuccessLottie() {
     <LottieView
       source={require('@/assets/lottie/success-bounce.json')}
       autoPlay
-      loop
+      loop={false}
       style={{ width: 120, height: 120 }}
     />
   );

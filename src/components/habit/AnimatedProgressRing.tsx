@@ -1,16 +1,10 @@
-import { useEffect, useState } from 'react';
+import { memo, useEffect } from 'react';
 import { View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
-import Animated, {
-  Easing,
-  runOnJS,
-  useAnimatedProps,
-  useAnimatedReaction,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import Animated, { Easing, useAnimatedProps, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { Text } from '@/components/ui';
+import { useAdaptivePerformance } from '@/hooks/useAdaptivePerformance';
 import { useThemeTokens } from '@/theme';
 import { cn } from '@/utils/cn';
 
@@ -22,17 +16,19 @@ type AnimatedProgressRingProps = {
   size?: number;
   strokeWidth?: number;
   duration?: number;
+  animate?: boolean;
 };
 
-export function AnimatedProgressRing({
+function AnimatedProgressRingComponent({
   completionPercent,
   label,
   size = 120,
   strokeWidth = 10,
   duration = 900,
+  animate = true,
 }: AnimatedProgressRingProps) {
   const { palette, typography } = useThemeTokens();
-  const [displayPercent, setDisplayPercent] = useState(0);
+  const { shouldReduceMotion, timingDurationScale } = useAdaptivePerformance();
 
   const clampedProgress = Math.min(Math.max(completionPercent, 0), 1);
   const progress = useSharedValue(0);
@@ -41,20 +37,13 @@ export function AnimatedProgressRing({
   const circumference = 2 * Math.PI * radius;
 
   useEffect(() => {
-    progress.value = 0;
+    const resolvedDuration = animate && !shouldReduceMotion ? Math.round(duration * timingDurationScale) : 0;
+
     progress.value = withTiming(clampedProgress, {
-      duration,
+      duration: resolvedDuration,
       easing: Easing.out(Easing.cubic),
     });
-  }, [clampedProgress, duration, progress]);
-
-  useAnimatedReaction(
-    () => progress.value,
-    (value) => {
-      runOnJS(setDisplayPercent)(Math.round(value * 100));
-    },
-    [progress],
-  );
+  }, [animate, clampedProgress, duration, progress, shouldReduceMotion, timingDurationScale]);
 
   const animatedProps = useAnimatedProps(() => ({
     strokeDashoffset: circumference * (1 - progress.value),
@@ -63,14 +52,7 @@ export function AnimatedProgressRing({
   return (
     <View className="items-center justify-center">
       <Svg width={size} height={size}>
-        <Circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke={palette.ringTrack}
-          strokeWidth={strokeWidth}
-          fill="transparent"
-        />
+        <Circle cx={size / 2} cy={size / 2} r={radius} stroke={palette.ringTrack} strokeWidth={strokeWidth} fill="transparent" />
         <AnimatedCircle
           cx={size / 2}
           cy={size / 2}
@@ -86,9 +68,11 @@ export function AnimatedProgressRing({
         />
       </Svg>
       <View className="absolute items-center">
-        <Text className={cn(typography.subheading)}>{displayPercent}%</Text>
+        <Text className={cn(typography.subheading)}>{Math.round(clampedProgress * 100)}%</Text>
         {label ? <Text muted className="text-xs">{label}</Text> : null}
       </View>
     </View>
   );
 }
+
+export const AnimatedProgressRing = memo(AnimatedProgressRingComponent);
