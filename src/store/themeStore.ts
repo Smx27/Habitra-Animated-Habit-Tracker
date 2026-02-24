@@ -15,13 +15,22 @@ type ThemeStore = {
 export const useThemeStore = create<ThemeStore>()(
   persist(
     (set, get) => ({
-      themeMode: 'system',
+      themeMode: 'dark',
       setThemeMode: (themeMode) => set({ themeMode }),
       toggleTheme: (systemScheme) => {
         const currentMode = get().themeMode;
-        const resolvedMode = currentMode === 'system' ? systemScheme : currentMode;
 
-        set({ themeMode: resolvedMode === 'dark' ? 'light' : 'dark' });
+        if (currentMode === 'dark') {
+          set({ themeMode: 'light' });
+          return;
+        }
+
+        if (currentMode === 'light') {
+          set({ themeMode: 'dark' });
+          return;
+        }
+
+        set({ themeMode: systemScheme === 'dark' ? 'light' : 'dark' });
       },
     }),
     {
