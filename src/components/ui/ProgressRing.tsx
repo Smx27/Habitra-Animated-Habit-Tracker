@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import Animated, { useAnimatedProps, withTiming } from 'react-native-reanimated';
@@ -15,7 +16,7 @@ type ProgressRingProps = {
   label?: string;
 };
 
-export function ProgressRing({ size = 120, strokeWidth = 10, progress, label }: ProgressRingProps) {
+function ProgressRingComponent({ size = 120, strokeWidth = 10, progress, label }: ProgressRingProps) {
   const { palette, typography } = useThemeTokens();
   const clampedProgress = Math.min(Math.max(progress, 0), 1);
   const radius = (size - strokeWidth) / 2;
@@ -28,14 +29,7 @@ export function ProgressRing({ size = 120, strokeWidth = 10, progress, label }: 
   return (
     <View className="items-center justify-center">
       <Svg width={size} height={size}>
-        <Circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke={palette.ringTrack}
-          strokeWidth={strokeWidth}
-          fill="transparent"
-        />
+        <Circle cx={size / 2} cy={size / 2} r={radius} stroke={palette.ringTrack} strokeWidth={strokeWidth} fill="transparent" />
         <AnimatedCircle
           cx={size / 2}
           cy={size / 2}
@@ -57,3 +51,5 @@ export function ProgressRing({ size = 120, strokeWidth = 10, progress, label }: 
     </View>
   );
 }
+
+export const ProgressRing = memo(ProgressRingComponent);

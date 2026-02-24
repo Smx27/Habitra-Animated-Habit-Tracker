@@ -3,7 +3,6 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } fr
 
 import { Text } from '@/components/ui/Text';
 import { useThemeTokens } from '@/theme';
-import { triggerImpact } from '@/utils/haptics';
 import { cn } from '@/utils/cn';
 
 type Props = PressableProps & {
@@ -41,10 +40,7 @@ export function Button({ className, label, onPressIn, onPressOut, onPress, ...pr
           opacity.value = withTiming(1, { duration: 140 });
           onPressOut?.(event);
         }}
-        onPress={(event) => {
-          triggerImpact();
-          onPress?.(event);
-        }}
+        onPress={onPress}
         {...props}
       >
         <Text className={cn('text-center', color.actionPrimaryTextClass, typography.button)}>{label}</Text>

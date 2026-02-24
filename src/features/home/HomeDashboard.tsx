@@ -1,10 +1,12 @@
+import { FlashList, type ListRenderItem } from '@shopify/flash-list';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
-import { FlatList, type ListRenderItem, View } from 'react-native';
+import { View } from 'react-native';
 import Animated, { Easing, interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useIsFocused } from '@react-navigation/native';
 
 import { CompletionConfetti } from '@/components/CompletionConfetti';
 import { HabitCard } from '@/components/habit/HabitCard';
@@ -12,8 +14,10 @@ import { HabitCardSkeleton } from '@/components/habit/HabitCardSkeleton';
 import { FAB } from '@/components/ui';
 import { AddHabitModal } from '@/features/habits/AddHabitModal';
 import { calculateCurrentStreak, isCompletedOnDate } from '@/features/habits/utils/streak';
+import { useAdaptivePerformance } from '@/hooks/useAdaptivePerformance';
 import { useHabitActions } from '@/hooks/useHabitActions';
-import { selectDailyProgress, selectHabits, useHabitStore } from '@/store/habitStore';
+import { usePerformanceLogger } from '@/hooks/usePerformanceLogger';
+import { selectHabits, useHabitStore } from '@/store/habitStore';
 import { useThemeStore } from '@/store/themeStore';
 import { useThemeTokens } from '@/theme';
 import type { AddHabitPayload, Habit } from '@/types/habit';
@@ -49,7 +53,7 @@ const HabitListItem = memo(function HabitListItem({
   streak,
   index,
   onOpenHabit,
-  onCompleteHabit
+  onCompleteHabit,
 }: HabitListItemProps) {
   return (
     <HabitCard
@@ -65,14 +69,20 @@ const HabitListItem = memo(function HabitListItem({
 });
 
 export function HomeDashboard() {
+  usePerformanceLogger({ label: 'home-dashboard' });
+
   const router = useRouter();
-  const dailyProgress = useHabitStore(selectDailyProgress);
-  const { completed: completedCount, percent: completionPercent } = dailyProgress;
+  const isFocused = useIsFocused();
+  const { shouldReduceMotion } = useAdaptivePerformance();
+
   const habits = useHabitStore(selectHabits);
+  const completedCount = useHabitStore((state) => state.getDailyProgress().completed);
+  const completionPercent = useHabitStore((state) => state.getDailyProgress().percent);
   const addHabit = useHabitStore((state) => state.addHabit);
   const { handleCompleteHabit } = useHabitActions();
   const { color, spacing, typography, themeProgress } = useThemeTokens();
   const insets = useSafeAreaInsets();
+
   const [isAddHabitOpen, setAddHabitOpen] = useState(false);
   const [confettiVisible, setConfettiVisible] = useState(false);
   const [confettiPlayKey, setConfettiPlayKey] = useState(0);
@@ -101,26 +111,15 @@ export function HomeDashboard() {
 
   useEffect(() => {
     contentOpacity.value = withTiming(isHydrating ? 0 : 1, {
-      duration: 260,
+      duration: shouldReduceMotion ? 120 : 260,
       easing: Easing.out(Easing.cubic),
     });
-  }, [contentOpacity, isHydrating]);
+  }, [contentOpacity, isHydrating, shouldReduceMotion]);
 
-  const skeletonOpacityStyle = useAnimatedStyle(() => ({
-    opacity: 1 - contentOpacity.value,
-  }));
-
-  const contentOpacityStyle = useAnimatedStyle(() => ({
-    opacity: contentOpacity.value,
-  }));
-
-  const lightGradientStyle = useAnimatedStyle(() => ({
-    opacity: 1 - themeProgress.value,
-  }));
-
-  const darkGradientStyle = useAnimatedStyle(() => ({
-    opacity: themeProgress.value,
-  }));
+  const skeletonOpacityStyle = useAnimatedStyle(() => ({ opacity: 1 - contentOpacity.value }));
+  const contentOpacityStyle = useAnimatedStyle(() => ({ opacity: contentOpacity.value }));
+  const lightGradientStyle = useAnimatedStyle(() => ({ opacity: 1 - themeProgress.value }));
+  const darkGradientStyle = useAnimatedStyle(() => ({ opacity: themeProgress.value }));
 
   const animatedSectionTitleStyle = useAnimatedStyle(() => ({
     color: interpolateColor(themeProgress.value, [0, 1], ['#1e293b', '#f8fafc']),
@@ -137,12 +136,12 @@ export function HomeDashboard() {
     async (habitId: Habit['id']) => {
       const transition = await handleCompleteHabit(habitId);
 
-      if (transition?.isCompletedToday && transition.newStreak > 0 && transition.newStreak % 7 === 0) {
+      if (transition?.isCompletedToday && transition.newStreak > 0 && transition.newStreak % 7 === 0 && isFocused) {
         setConfettiPlayKey((current) => current + 1);
         setConfettiVisible(true);
       }
     },
-    [handleCompleteHabit],
+    [handleCompleteHabit, isFocused],
   );
 
   const renderHabitItem = useCallback<ListRenderItem<Habit>>(
@@ -166,12 +165,10 @@ export function HomeDashboard() {
   );
 
   const renderSkeletonItem = useCallback<ListRenderItem<string>>(({ index }) => <HabitCardSkeleton index={index} />, []);
+  const keyExtractor = useCallback((habit: Habit) => habit.id, []);
 
   const contentContainerStyle = useMemo(
-    () => ({
-      paddingTop: insets.top + 14,
-      paddingBottom: insets.bottom + 112,
-    }),
+    () => ({ paddingTop: insets.top + 14, paddingBottom: insets.bottom + 112 }),
     [insets.bottom, insets.top],
   );
 
@@ -179,22 +176,17 @@ export function HomeDashboard() {
     () => (
       <View className="gap-6 pb-3">
         <HeaderSection completedCount={completedCount} />
-        <ProgressSection completedCount={completedCount} completionPercent={completionPercent} />
+        <ProgressSection completedCount={completedCount} completionPercent={completionPercent} shouldAnimate={isFocused} />
         <StreakHeatmapCalendar habits={habits} />
         <Animated.Text style={animatedSectionTitleStyle} className={typography.title}>
           Today&apos;s Rituals
         </Animated.Text>
       </View>
     ),
-    [animatedSectionTitleStyle, completedCount, completionPercent, habits, typography.title],
+    [animatedSectionTitleStyle, completedCount, completionPercent, habits, isFocused, typography.title],
   );
 
-  const handleSaveHabit = useCallback(
-    (payload: AddHabitPayload) => {
-      addHabit(payload);
-    },
-    [addHabit],
-  );
+  const handleSaveHabit = useCallback((payload: AddHabitPayload) => addHabit(payload), [addHabit]);
 
   return (
     <View className="flex-1">
@@ -215,10 +207,9 @@ export function HomeDashboard() {
       />
 
       <Animated.View className="absolute inset-0" pointerEvents="none" style={skeletonOpacityStyle}>
-        <FlatList
+        <FlashList
           data={SKELETON_IDS}
           keyExtractor={(item) => item}
-          initialNumToRender={SKELETON_CARD_COUNT}
           scrollEnabled={false}
           contentContainerClassName={cn('gap-3', spacing.screenX)}
           contentContainerStyle={contentContainerStyle}
@@ -228,14 +219,10 @@ export function HomeDashboard() {
       </Animated.View>
 
       <Animated.View className="flex-1" style={contentOpacityStyle}>
-        <FlatList
+        <FlashList
           data={habits}
-          keyExtractor={(habit) => habit.id}
-          initialNumToRender={8}
-          windowSize={7}
+          keyExtractor={keyExtractor}
           removeClippedSubviews
-          maxToRenderPerBatch={8}
-          updateCellsBatchingPeriod={40}
           contentContainerClassName={cn('gap-3', spacing.screenX)}
           contentContainerStyle={contentContainerStyle}
           ListHeaderComponent={headerComponent}
@@ -247,7 +234,7 @@ export function HomeDashboard() {
       <FAB accessibilityLabel="Create habit" onPress={() => setAddHabitOpen(true)} />
 
       <CompletionConfetti
-        visible={confettiVisible}
+        visible={confettiVisible && isFocused}
         playKey={confettiPlayKey}
         onAnimationFinish={() => setConfettiVisible(false)}
       />

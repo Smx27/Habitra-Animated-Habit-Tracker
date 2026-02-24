@@ -23,6 +23,7 @@ import {
   SWIPE_SPRING_CONFIG,
 } from '@/components/habit/habitCard.constants';
 import { useCompletionBackgroundStyle, useCompletionCheckStyle } from '@/components/habit/habitCard.animations';
+import { useAdaptivePerformance } from '@/hooks/useAdaptivePerformance';
 import { type Habit } from '@/types/habit';
 import { useThemeTokens } from '@/theme';
 import { cn } from '@/utils/cn';
@@ -54,6 +55,7 @@ function HabitCardComponent({
   index = 0,
 }: HabitCardProps) {
   const { color, radius, shadows, spacing, scheme, typography } = useThemeTokens();
+  const { staggerDelayMs } = useAdaptivePerformance();
   const [cardWidth, setCardWidth] = useState(1);
   const completionTriggeredRef = useRef(false);
 
@@ -93,7 +95,6 @@ function HabitCardComponent({
 
   const handleMainPress = useCallback(() => {
     if (!disabled) {
-      void triggerImpact();
       onPress(habit.id);
     }
   }, [disabled, habit.id, onPress]);
@@ -146,7 +147,7 @@ function HabitCardComponent({
   return (
     <Animated.View
       layout={Layout.springify().damping(18).stiffness(180)}
-      entering={FadeInDown.delay(index * 60).springify().damping(20).stiffness(210)}
+      entering={FadeInDown.delay(index * staggerDelayMs).springify().damping(20).stiffness(210)}
       className="w-full"
       testID={testID}
     >

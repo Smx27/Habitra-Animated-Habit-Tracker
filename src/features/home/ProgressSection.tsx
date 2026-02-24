@@ -10,9 +10,10 @@ import { cn } from '@/utils/cn';
 type ProgressSectionProps = {
   completedCount: number;
   completionPercent: number;
+  shouldAnimate?: boolean;
 };
 
-export function ProgressSection({ completedCount, completionPercent }: ProgressSectionProps) {
+export function ProgressSection({ completedCount, completionPercent, shouldAnimate = true }: ProgressSectionProps) {
   const { radius, typography, color } = useThemeTokens();
   const { handleCompleteNextHabit } = useHabitActions();
 
@@ -26,7 +27,14 @@ export function ProgressSection({ completedCount, completionPercent }: ProgressS
           </Text>
         </View>
         <View className="items-center">
-          <AnimatedProgressRing completionPercent={completionPercent} label="Daily goal" size={134} strokeWidth={11} duration={1000} />
+          <AnimatedProgressRing
+            completionPercent={completionPercent}
+            label="Daily goal"
+            size={134}
+            strokeWidth={11}
+            duration={1000}
+            animate={shouldAnimate}
+          />
         </View>
         <Button label="Mark one done" onPress={handleCompleteNextHabit} />
       </View>
