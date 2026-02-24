@@ -23,13 +23,15 @@ import {
   SWIPE_SPRING_CONFIG,
 } from '@/components/habit/habitCard.constants';
 import { useCompletionBackgroundStyle, useCompletionCheckStyle } from '@/components/habit/habitCard.animations';
-import { HABIT_CATEGORY_COLORS, type Habit, type HabitCategory } from '@/types/habit';
+import { type Habit } from '@/types/habit';
 import { useThemeTokens } from '@/theme';
 import { cn } from '@/utils/cn';
 
 export interface HabitCardProps {
   onCompletionTransition?: (habitId: Habit['id']) => void;
-  habit: Pick<Habit, 'id' | 'title' | 'icon' | 'category' | 'streak' | 'completedToday' | 'accentColor'>;
+  habit: Habit;
+  completedToday: boolean;
+  streak: number;
   onPress: (habitId: Habit['id']) => void;
   onComplete: (habitId: Habit['id']) => void | Promise<void>;
   onToggleCompletion?: (habitId: Habit['id']) => void | Promise<void>;
@@ -38,16 +40,10 @@ export interface HabitCardProps {
   index?: number;
 }
 
-const categoryLabelMap: Record<HabitCategory, string> = {
-  health: 'Health',
-  mindfulness: 'Mindfulness',
-  learning: 'Learning',
-  productivity: 'Productivity',
-  wellness: 'Wellness',
-};
-
 function HabitCardComponent({
   habit,
+  completedToday,
+  streak,
   onPress,
   onComplete,
   onToggleCompletion,
@@ -62,21 +58,20 @@ function HabitCardComponent({
 
   const translateX = useSharedValue(0);
   const pressScale = useSharedValue(1);
-  const completionProgress = useSharedValue(habit.completedToday ? 1 : 0);
+  const completionProgress = useSharedValue(completedToday ? 1 : 0);
 
-  const categoryColors = HABIT_CATEGORY_COLORS[habit.category];
-  const accentColor = habit.accentColor ?? categoryColors.accent;
+  const accentColor = habit.color;
 
   useEffect(() => {
     completionTriggeredRef.current = false;
-    completionProgress.value = withSpring(habit.completedToday ? 1 : 0, COMPLETION_SPRING_CONFIG);
-    if (!habit.completedToday) {
+    completionProgress.value = withSpring(completedToday ? 1 : 0, COMPLETION_SPRING_CONFIG);
+    if (!completedToday) {
       translateX.value = withSpring(0, SWIPE_SPRING_CONFIG);
     }
-  }, [completionProgress, habit.completedToday, translateX]);
+  }, [completedToday, completionProgress, translateX]);
 
   const triggerCompletion = useCallback(() => {
-    if (completionTriggeredRef.current || habit.completedToday) {
+    if (completionTriggeredRef.current || completedToday) {
       return;
     }
 
@@ -84,7 +79,7 @@ function HabitCardComponent({
     completionProgress.value = withSpring(1, COMPLETION_SPRING_CONFIG);
     onCompletionTransition?.(habit.id);
     void onComplete(habit.id);
-  }, [completionProgress, habit.completedToday, habit.id, onComplete, onCompletionTransition]);
+  }, [completedToday, completionProgress, habit.id, onComplete, onCompletionTransition]);
 
   const handlePressIn = useCallback(() => {
     pressScale.value = withSpring(PRESS_SCALE_ACTIVE, PRESS_SPRING_CONFIG);
@@ -95,11 +90,9 @@ function HabitCardComponent({
   }, [pressScale]);
 
   const handleMainPress = useCallback(() => {
-    if (disabled) {
-      return;
+    if (!disabled) {
+      onPress(habit.id);
     }
-
-    onPress(habit.id);
   }, [disabled, habit.id, onPress]);
 
   const handleTogglePress = useCallback(() => {
@@ -107,13 +100,13 @@ function HabitCardComponent({
       return;
     }
 
-    if (habit.completedToday && onToggleCompletion) {
+    if (completedToday && onToggleCompletion) {
       void onToggleCompletion(habit.id);
       return;
     }
 
     triggerCompletion();
-  }, [disabled, habit.completedToday, habit.id, onToggleCompletion, triggerCompletion]);
+  }, [completedToday, disabled, habit.id, onToggleCompletion, triggerCompletion]);
 
   const panGesture = useMemo(
     () =>
@@ -126,7 +119,7 @@ function HabitCardComponent({
         })
         .onEnd(() => {
           const threshold = cardWidth * SWIPE_COMPLETE_THRESHOLD_RATIO;
-          const shouldComplete = translateX.value >= threshold && !habit.completedToday;
+          const shouldComplete = translateX.value >= threshold && !completedToday;
 
           if (shouldComplete) {
             translateX.value = withSpring(cardWidth * 0.18, SWIPE_SPRING_CONFIG);
@@ -136,7 +129,7 @@ function HabitCardComponent({
 
           translateX.value = withSpring(0, SWIPE_SPRING_CONFIG);
         }),
-    [cardWidth, disabled, habit.completedToday, translateX, triggerCompletion],
+    [cardWidth, completedToday, disabled, translateX, triggerCompletion],
   );
 
   const cardAnimatedStyle = useAnimatedStyle(() => ({
@@ -176,34 +169,27 @@ function HabitCardComponent({
                   onPressIn={handlePressIn}
                   onPressOut={handlePressOut}
                   accessibilityRole="button"
-                  accessibilityLabel={`${habit.title}, ${habit.completedToday ? 'completed' : 'not completed'}`}
+                  accessibilityLabel={`${habit.title}, ${completedToday ? 'completed' : 'not completed'}`}
                   accessibilityHint="Tap to open habit details or swipe right to complete."
                   disabled={disabled}
                 >
                   <View className="flex-1 flex-row items-center gap-3">
                     <View className={cn('size-11 items-center justify-center border border-white/30 bg-white/20', radius.pill)}>
-                      <Text className="text-xl">{habit.icon ?? '✨'}</Text>
+                      <Text className="text-xl">✨</Text>
                     </View>
 
                     <View className="flex-1 gap-1">
                       <View className="flex-row items-center gap-2">
-                        <Text className={cn(typography.body, habit.completedToday ? 'text-emerald-300' : undefined)}>{habit.title}</Text>
+                        <Text className={cn(typography.body, completedToday ? 'text-emerald-300' : undefined)}>{habit.title}</Text>
                         <View className={cn('flex-row items-center rounded-full bg-black/15 px-2 py-0.5')}>
                           <Text className="text-xs text-amber-200">🔥 </Text>
-                          <AnimatedCounter value={habit.streak} className="text-xs text-amber-200" />
+                          <AnimatedCounter value={streak} className="text-xs text-amber-200" />
                         </View>
                       </View>
 
-                      <View className="flex-row items-center gap-2">
-                        <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: categoryColors.background }}>
-                          <Text className="text-[11px] font-medium" style={{ color: categoryColors.text }}>
-                            {categoryLabelMap[habit.category]}
-                          </Text>
-                        </View>
-                        <Text className={cn(typography.caption, habit.completedToday ? 'text-emerald-300/80' : color.textMutedClass)}>
-                          {habit.completedToday ? 'Completed today' : 'Swipe right or tap check'}
-                        </Text>
-                      </View>
+                      <Text className={cn(typography.caption, completedToday ? 'text-emerald-300/80' : color.textMutedClass)}>
+                        {completedToday ? 'Completed today' : 'Swipe right or tap check'}
+                      </Text>
                     </View>
                   </View>
 
@@ -219,16 +205,16 @@ function HabitCardComponent({
                       className={cn(
                         'size-9 items-center justify-center border',
                         radius.pill,
-                        habit.completedToday ? 'border-emerald-300/70 bg-emerald-400/20' : 'border-white/35 bg-white/10',
+                        completedToday ? 'border-emerald-300/70 bg-emerald-400/20' : 'border-white/35 bg-white/10',
                       )}
                       onPress={handleTogglePress}
                       accessibilityRole="button"
-                      accessibilityLabel={habit.completedToday ? `Mark ${habit.title} incomplete` : `Mark ${habit.title} complete`}
-                      accessibilityHint={habit.completedToday ? 'Double tap to undo completion.' : 'Double tap to complete this habit.'}
+                      accessibilityLabel={completedToday ? `Mark ${habit.title} incomplete` : `Mark ${habit.title} complete`}
+                      accessibilityHint={completedToday ? 'Double tap to undo completion.' : 'Double tap to complete this habit.'}
                       disabled={disabled}
                     >
-                      <Text className={cn(typography.body, habit.completedToday ? 'text-emerald-300' : color.textMutedClass)}>
-                        {habit.completedToday ? '✓' : '○'}
+                      <Text className={cn(typography.body, completedToday ? 'text-emerald-300' : color.textMutedClass)}>
+                        {completedToday ? '✓' : '○'}
                       </Text>
                     </Pressable>
                   </View>

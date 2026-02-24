@@ -16,6 +16,8 @@ export function HabitListSection() {
     void handleCompleteHabit(habitId);
   };
 
+  const today = new Date().toISOString().split('T')[0];
+
   return (
     <View className="gap-3">
       <Text className={typography.subheading}>HabitList</Text>
@@ -23,6 +25,8 @@ export function HabitListSection() {
         <HabitCard
           key={habit.id}
           habit={habit}
+          completedToday={habit.completedDates.includes(today)}
+          streak={habit.completedDates.length}
           index={index}
           onPress={handleHabitPress}
           onComplete={handleHabitPress}

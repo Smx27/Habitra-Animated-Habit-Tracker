@@ -10,7 +10,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { HABIT_COLOR_OPTIONS, HABIT_ICON_OPTIONS } from '@/constants/habitCreation';
+import { HABIT_COLOR_OPTIONS } from '@/constants/habitCreation';
 import { Text } from '@/components/ui';
 import { useThemeTokens } from '@/theme';
 import { type AddHabitPayload } from '@/types/habit';
@@ -18,7 +18,6 @@ import { cn } from '@/utils/cn';
 import { triggerImpact } from '@/utils/haptics';
 
 import { ColorPickerRow } from './components/ColorPickerRow';
-import { IconPickerRow } from './components/IconPickerRow';
 import { SaveHabitButton } from './components/SaveHabitButton';
 
 type AddHabitModalProps = {
@@ -34,7 +33,6 @@ export function AddHabitModal({ visible, onClose, onSave }: AddHabitModalProps) 
   const [isMounted, setIsMounted] = useState(visible);
   const [isSaving, setIsSaving] = useState(false);
   const [title, setTitle] = useState('');
-  const [selectedIcon, setSelectedIcon] = useState<string>(HABIT_ICON_OPTIONS[0]);
   const [selectedAccentColor, setSelectedAccentColor] = useState<string>(HABIT_COLOR_OPTIONS[0]);
 
   const backdropOpacity = useSharedValue(0);
@@ -43,7 +41,6 @@ export function AddHabitModal({ visible, onClose, onSave }: AddHabitModalProps) 
 
   const resetForm = useCallback(() => {
     setTitle('');
-    setSelectedIcon(HABIT_ICON_OPTIONS[0]);
     setSelectedAccentColor(HABIT_COLOR_OPTIONS[0]);
     setIsSaving(false);
   }, []);
@@ -104,7 +101,7 @@ export function AddHabitModal({ visible, onClose, onSave }: AddHabitModalProps) 
     const cleanTitle = title.trim();
     const normalizedTitle = cleanTitle.replace(/\s+/g, ' ');
 
-    if (!normalizedTitle || !selectedIcon || !selectedAccentColor) {
+    if (!normalizedTitle || !selectedAccentColor) {
       return;
     }
 
@@ -114,8 +111,7 @@ export function AddHabitModal({ visible, onClose, onSave }: AddHabitModalProps) 
       await Promise.resolve(
         onSave({
           title: normalizedTitle,
-          icon: selectedIcon,
-          accentColor: selectedAccentColor,
+          color: selectedAccentColor,
         }),
       );
 
@@ -124,7 +120,7 @@ export function AddHabitModal({ visible, onClose, onSave }: AddHabitModalProps) 
     } finally {
       setIsSaving(false);
     }
-  }, [animateOut, isSaving, onClose, onSave, resetForm, selectedAccentColor, selectedIcon, title]);
+  }, [animateOut, isSaving, onClose, onSave, resetForm, selectedAccentColor, title]);
 
   const backdropStyle = useAnimatedStyle(() => ({
     opacity: backdropOpacity.value,
@@ -167,7 +163,6 @@ export function AddHabitModal({ visible, onClose, onSave }: AddHabitModalProps) 
               />
             </View>
 
-            <IconPickerRow icons={[...HABIT_ICON_OPTIONS]} selectedIcon={selectedIcon} onSelect={setSelectedIcon} />
             <ColorPickerRow options={HABIT_COLOR_OPTIONS} selectedColor={selectedAccentColor} onSelect={setSelectedAccentColor} />
             <SaveHabitButton disabled={isSaveDisabled} isSaving={isSaving} onPress={handleSave} />
           </View>

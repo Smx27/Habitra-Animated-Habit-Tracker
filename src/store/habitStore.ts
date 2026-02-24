@@ -1,44 +1,44 @@
 import { create } from 'zustand';
 
 import type { Habit, HabitCompletionTransition, HabitStore } from '@/types/habit';
-import { getCompletedCount, getCompletionPercent, HABIT_CATEGORY_COLORS } from '@/types/habit';
+import { getCompletedCount, getCompletionPercent } from '@/types/habit';
+
+const getTodayISODate = () => new Date().toISOString().split('T')[0];
+
+const getDateOffsetISO = (daysOffset: number) => {
+  const date = new Date();
+  date.setDate(date.getDate() + daysOffset);
+  return date.toISOString().split('T')[0];
+};
 
 const initialHabits: Habit[] = [
   {
     id: 'morning-stretch',
     title: 'Morning stretch',
-    icon: '🧘',
-    category: 'mindfulness',
-    streak: 6,
-    accentColor: HABIT_CATEGORY_COLORS.mindfulness.accent,
-    completedToday: true,
+    color: '#8b5cf6',
+    completedDates: [getDateOffsetISO(-5), getDateOffsetISO(-4), getDateOffsetISO(-3), getDateOffsetISO(-2), getDateOffsetISO(-1), getDateOffsetISO(0)],
+    createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
   },
   {
     id: 'drink-water',
     title: 'Drink water',
-    icon: '💧',
-    category: 'wellness',
-    streak: 4,
-    accentColor: HABIT_CATEGORY_COLORS.wellness.accent,
-    completedToday: false,
+    color: '#06b6d4',
+    completedDates: [getDateOffsetISO(-3), getDateOffsetISO(-2), getDateOffsetISO(-1)],
+    createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
   },
   {
     id: 'read-10-minutes',
     title: 'Read 10 minutes',
-    icon: '📚',
-    category: 'learning',
-    streak: 12,
-    accentColor: HABIT_CATEGORY_COLORS.learning.accent,
-    completedToday: false,
+    color: '#f59e0b',
+    completedDates: [getDateOffsetISO(-8), getDateOffsetISO(-7), getDateOffsetISO(-6), getDateOffsetISO(-5), getDateOffsetISO(-4)],
+    createdAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
   },
   {
     id: 'evening-review',
     title: 'Evening review',
-    icon: '🌙',
-    category: 'productivity',
-    streak: 8,
-    accentColor: HABIT_CATEGORY_COLORS.productivity.accent,
-    completedToday: true,
+    color: '#3b82f6',
+    completedDates: [getDateOffsetISO(-6), getDateOffsetISO(-5), getDateOffsetISO(-4), getDateOffsetISO(-3), getDateOffsetISO(-2), getDateOffsetISO(-1), getDateOffsetISO(0)],
+    createdAt: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000),
   },
 ];
 
@@ -56,23 +56,25 @@ export const useHabitStore = create<HabitStore>((set) => ({
       return null;
     }
 
-    const wasCompletedToday = targetHabit.completedToday;
-    const previousStreak = targetHabit.streak;
+    const today = getTodayISODate();
+    const wasCompletedToday = targetHabit.completedDates.includes(today);
+    const previousStreak = targetHabit.completedDates.length;
     const isCompletedToday = !wasCompletedToday;
-    const newStreak = isCompletedToday ? previousStreak + 1 : Math.max(0, previousStreak - 1);
+
+    const nextCompletedDates = isCompletedToday
+      ? [...targetHabit.completedDates, today]
+      : targetHabit.completedDates.filter((date) => date !== today);
 
     const transition: HabitCompletionTransition = {
       habitId: id,
       wasCompletedToday,
       isCompletedToday,
       previousStreak,
-      newStreak,
+      newStreak: nextCompletedDates.length,
     };
 
     set((state: HabitStore) => ({
-      habits: state.habits.map((habit) =>
-        habit.id === id ? { ...habit, completedToday: isCompletedToday, streak: newStreak } : habit,
-      ),
+      habits: state.habits.map((habit) => (habit.id === id ? { ...habit, completedDates: nextCompletedDates } : habit)),
     }));
 
     return transition;
@@ -84,11 +86,9 @@ export const useHabitStore = create<HabitStore>((set) => ({
         {
           id: `habit-${Date.now()}`,
           title: payload.title,
-          icon: payload.icon,
-          category: payload.category ?? 'wellness',
-          streak: 0,
-          accentColor: payload.accentColor,
-          completedToday: false,
+          color: payload.color,
+          completedDates: [],
+          createdAt: new Date(),
         },
       ],
     })),
