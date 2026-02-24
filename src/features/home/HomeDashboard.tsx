@@ -1,4 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, type ListRenderItem, View } from 'react-native';
@@ -25,6 +26,7 @@ type HabitListItemProps = {
   completedToday: boolean;
   streak: number;
   index: number;
+  onOpenHabit: (habitId: Habit['id']) => void;
   onCompleteHabit: (habitId: Habit['id']) => void;
   onCompletionTransition: (habitId: Habit['id']) => void;
 };
@@ -42,6 +44,7 @@ const HabitListItem = memo(function HabitListItem({
   completedToday,
   streak,
   index,
+  onOpenHabit,
   onCompleteHabit,
   onCompletionTransition,
 }: HabitListItemProps) {
@@ -51,7 +54,7 @@ const HabitListItem = memo(function HabitListItem({
       index={index}
       completedToday={completedToday}
       streak={streak}
-      onPress={onCompleteHabit}
+      onPress={onOpenHabit}
       onComplete={onCompleteHabit}
       onToggleCompletion={onCompleteHabit}
       onCompletionTransition={onCompletionTransition}
@@ -60,6 +63,7 @@ const HabitListItem = memo(function HabitListItem({
 });
 
 export function HomeDashboard() {
+  const router = useRouter();
   const dailyProgress = useHabitStore(selectDailyProgress);
   const { completed: completedCount, percent: completionPercent } = dailyProgress;
   const habits = useHabitStore(selectHabits);
@@ -110,6 +114,12 @@ export function HomeDashboard() {
     color: interpolateColor(themeProgress.value, [0, 1], ['#1e293b', '#f8fafc']),
   }));
 
+  const handleOpenHabit = useCallback(
+    (habitId: Habit['id']) => {
+      router.push(`/habit/${habitId}`);
+    },
+    [router],
+  );
 
   const handleCompleteHabitPress = useCallback(
     (habitId: Habit['id']) => {
@@ -135,12 +145,13 @@ export function HomeDashboard() {
           completedToday={completedToday}
           streak={streak}
           index={index}
+          onOpenHabit={handleOpenHabit}
           onCompleteHabit={handleCompleteHabitPress}
           onCompletionTransition={handleCompletionTransition}
         />
       );
     },
-    [handleCompleteHabitPress, handleCompletionTransition],
+    [handleCompleteHabitPress, handleCompletionTransition, handleOpenHabit],
   );
 
   const renderSkeletonItem = useCallback<ListRenderItem<string>>(({ index }) => <HabitCardSkeleton index={index} />, []);
