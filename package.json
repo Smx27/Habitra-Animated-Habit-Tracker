@@ -8,7 +8,10 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "start:prod": "expo start --no-dev --minify",
+    "android:prod": "expo start --android --no-dev --minify",
+    "ios:prod": "expo start --ios --no-dev --minify"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^1.24.0",
@@ -29,12 +32,14 @@
     "react-native-screens": "latest",
     "react-native-svg": "^15.15.3",
     "react-native-web": "^0.21.0",
-    "zustand": "^5.0.11"
+    "zustand": "^5.0.11",
+    "expo-splash-screen": "~0.30.10"
   },
   "devDependencies": {
     "@types/react": "latest",
     "babel-plugin-module-resolver": "^5.0.2",
     "tailwindcss": "^3.4.19",
-    "typescript": "latest"
+    "typescript": "latest",
+    "babel-plugin-transform-remove-console": "^6.9.4"
   }
 }

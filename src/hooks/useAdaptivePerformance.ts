@@ -1,17 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { AppState, type AppStateStatus, Platform } from 'react-native';
 
-const DEFAULT_REFRESH_RATE = 60;
-const HIGH_REFRESH_RATE_THRESHOLD = 100;
-const SAMPLE_COUNT = 20;
+import {
+  getPerformanceMode,
+  performanceConfig,
+  resolvePerformanceProfile,
+  setPerformanceMode,
+  type PerformanceMode,
+} from '@/utils/performanceConfig';
 
-type AdaptivePerformance = {
-  refreshRate: number;
-  isHighRefreshRate: boolean;
-  shouldReduceMotion: boolean;
-  timingDurationScale: number;
-  staggerDelayMs: number;
-};
+const DEFAULT_REFRESH_RATE = 60;
+const SAMPLE_COUNT = 20;
 
 const estimateRefreshRate = async () => {
   if (Platform.OS === 'web') {
@@ -43,9 +42,10 @@ const estimateRefreshRate = async () => {
   });
 };
 
-export function useAdaptivePerformance(): AdaptivePerformance {
+export function useAdaptivePerformance() {
   const [refreshRate, setRefreshRate] = useState(DEFAULT_REFRESH_RATE);
   const [appState, setAppState] = useState<AppStateStatus>(AppState.currentState);
+  const mode = useSyncExternalStore(performanceConfig.subscribe.bind(performanceConfig), getPerformanceMode);
 
   useEffect(() => {
     let mounted = true;
@@ -69,16 +69,10 @@ export function useAdaptivePerformance(): AdaptivePerformance {
     };
   }, []);
 
-  return useMemo(() => {
-    const isHighRefreshRate = refreshRate >= HIGH_REFRESH_RATE_THRESHOLD;
-    const shouldReduceMotion = appState !== 'active';
+  const profile = useMemo(() => resolvePerformanceProfile({ mode, refreshRate, appState }), [appState, mode, refreshRate]);
 
-    return {
-      refreshRate,
-      isHighRefreshRate,
-      shouldReduceMotion,
-      timingDurationScale: shouldReduceMotion ? 0.3 : isHighRefreshRate ? 0.9 : 1,
-      staggerDelayMs: shouldReduceMotion ? 0 : isHighRefreshRate ? 26 : 42,
-    };
-  }, [appState, refreshRate]);
+  return {
+    ...profile,
+    setPerformanceMode: (nextMode: PerformanceMode) => setPerformanceMode(nextMode),
+  };
 }

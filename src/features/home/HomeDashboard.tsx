@@ -16,7 +16,6 @@ import { AddHabitModal } from '@/features/habits/AddHabitModal';
 import { calculateCurrentStreak, isCompletedOnDate } from '@/features/habits/utils/streak';
 import { useAdaptivePerformance } from '@/hooks/useAdaptivePerformance';
 import { useHabitActions } from '@/hooks/useHabitActions';
-import { usePerformanceLogger } from '@/hooks/usePerformanceLogger';
 import { selectHabits, useHabitStore } from '@/store/habitStore';
 import { useThemeStore } from '@/store/themeStore';
 import { useThemeTokens } from '@/theme';
@@ -69,8 +68,6 @@ const HabitListItem = memo(function HabitListItem({
 });
 
 export function HomeDashboard() {
-  usePerformanceLogger({ label: 'home-dashboard' });
-
   const router = useRouter();
   const isFocused = useIsFocused();
   const { shouldReduceMotion } = useAdaptivePerformance();
