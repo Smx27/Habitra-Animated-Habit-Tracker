@@ -26,6 +26,7 @@ import { useCompletionBackgroundStyle, useCompletionCheckStyle } from '@/compone
 import { type Habit } from '@/types/habit';
 import { useThemeTokens } from '@/theme';
 import { cn } from '@/utils/cn';
+import { triggerImpact } from '@/utils/haptics';
 
 export interface HabitCardProps {
   onCompletionTransition?: (habitId: Habit['id']) => void;
@@ -76,6 +77,7 @@ function HabitCardComponent({
     }
 
     completionTriggeredRef.current = true;
+    void triggerImpact();
     completionProgress.value = withSpring(1, COMPLETION_SPRING_CONFIG);
     onCompletionTransition?.(habit.id);
     void onComplete(habit.id);
@@ -91,6 +93,7 @@ function HabitCardComponent({
 
   const handleMainPress = useCallback(() => {
     if (!disabled) {
+      void triggerImpact();
       onPress(habit.id);
     }
   }, [disabled, habit.id, onPress]);
@@ -101,6 +104,7 @@ function HabitCardComponent({
     }
 
     if (completedToday && onToggleCompletion) {
+      void triggerImpact();
       void onToggleCompletion(habit.id);
       return;
     }
@@ -149,7 +153,7 @@ function HabitCardComponent({
       <GestureDetector gesture={panGesture}>
         <Animated.View style={[cardAnimatedStyle]}>
           <LinearGradient
-            colors={[`${accentColor}66`, `${accentColor}22`, 'rgba(255,255,255,0.08)']}
+            colors={[`${accentColor}80`, `${accentColor}2E`, 'rgba(255,255,255,0.10)']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             className={cn('rounded-3xl p-[1px]')}
@@ -158,9 +162,9 @@ function HabitCardComponent({
             }}
           >
             <BlurView
-              intensity={42}
+              intensity={50}
               tint={scheme}
-              className={cn('overflow-hidden border border-white/20', radius.card, color.cardBackgroundClass)}
+              className={cn('overflow-hidden border border-white/25', radius.card, color.cardBackgroundClass)}
             >
               <Animated.View style={completionBackgroundStyle}>
                 <Pressable
@@ -173,17 +177,17 @@ function HabitCardComponent({
                   accessibilityHint="Tap to open habit details or swipe right to complete."
                   disabled={disabled}
                 >
-                  <View className="flex-1 flex-row items-center gap-3">
-                    <View className={cn('size-11 items-center justify-center border border-white/30 bg-white/20', radius.pill)}>
+                  <View className="flex-1 flex-row items-center gap-3.5">
+                    <View className={cn('size-11 items-center justify-center border border-white/30 bg-white/25', radius.pill)}>
                       <Text className="text-xl">✨</Text>
                     </View>
 
-                    <View className="flex-1 gap-1">
-                      <View className="flex-row items-center gap-2">
-                        <Text className={cn(typography.body, completedToday ? 'text-emerald-300' : undefined)}>{habit.title}</Text>
+                    <View className="flex-1 gap-1.5">
+                      <View className="flex-row items-center gap-2.5">
+                        <Text className={cn(typography.title, completedToday ? 'text-emerald-300' : undefined)}>{habit.title}</Text>
                         <View className={cn('flex-row items-center rounded-full bg-black/15 px-2 py-0.5')}>
-                          <Text className="text-xs text-amber-200">🔥 </Text>
-                          <AnimatedCounter value={streak} className="text-xs text-amber-200" />
+                          <Text className="text-[11px] text-amber-200">🔥 </Text>
+                          <AnimatedCounter value={streak} className="text-[11px] text-amber-200" />
                         </View>
                       </View>
 

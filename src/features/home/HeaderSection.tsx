@@ -5,6 +5,7 @@ import Animated, { interpolateColor, useAnimatedStyle } from 'react-native-reani
 import { Text } from '@/components/ui';
 import { useThemeTokens } from '@/theme';
 import { cn } from '@/utils/cn';
+import { triggerImpact } from '@/utils/haptics';
 
 type HeaderSectionProps = {
   completedCount: number;
@@ -14,7 +15,7 @@ export function HeaderSection({ completedCount }: HeaderSectionProps) {
   const { color, radius, typography, themeMode, toggleTheme, themeProgress } = useThemeTokens();
 
   const animatedSurfaceStyle = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(themeProgress.value, [0, 1], ['rgba(255,255,255,0.75)', 'rgba(15,23,42,0.78)']),
+    backgroundColor: interpolateColor(themeProgress.value, [0, 1], ['rgba(255,255,255,0.68)', 'rgba(15,23,42,0.72)']),
   }));
 
   const animatedHeadingStyle = useAnimatedStyle(() => ({
@@ -22,13 +23,19 @@ export function HeaderSection({ completedCount }: HeaderSectionProps) {
   }));
 
   return (
-    <BlurView intensity={35} tint="default" className={cn('overflow-hidden border border-white/20 p-5', radius.card, color.surfaceClass)}>
+    <BlurView intensity={46} tint="default" className={cn('overflow-hidden border border-white/25 p-5', radius.card, color.surfaceClass)}>
       <Animated.View style={animatedSurfaceStyle} className="absolute inset-0" pointerEvents="none" />
-      <View className="gap-2">
+      <View className="gap-3">
         <View className="flex-row items-center justify-between">
-          <Text className={cn(typography.caption, color.textMutedClass)}>Good morning</Text>
-          <Pressable onPress={toggleTheme} className="rounded-full border border-white/30 px-3 py-1.5">
-            <Text className={cn(typography.caption, color.textMutedClass)}>
+          <Text className={cn(typography.caption, color.textMutedClass)}>Daily focus</Text>
+          <Pressable
+            onPress={() => {
+              void triggerImpact();
+              toggleTheme();
+            }}
+            className="rounded-full border border-white/30 px-3 py-2"
+          >
+            <Text className={cn('text-[11px] font-semibold uppercase tracking-[1.8px]', color.textMutedClass)}>
               {themeMode === 'system' ? 'Theme: Auto' : `Theme: ${themeMode === 'dark' ? 'Dark' : 'Light'}`}
             </Text>
           </Pressable>
@@ -36,7 +43,7 @@ export function HeaderSection({ completedCount }: HeaderSectionProps) {
         <Animated.Text style={animatedHeadingStyle} className={typography.heading}>
           Ready to make today count?
         </Animated.Text>
-        <Text muted className={typography.body}>
+        <Text muted className={typography.bodySmall}>
           You have completed {completedCount} habits today.
         </Text>
       </View>
