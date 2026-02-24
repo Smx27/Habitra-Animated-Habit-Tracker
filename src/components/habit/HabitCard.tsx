@@ -1,6 +1,5 @@
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as Haptics from 'expo-haptics';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, Pressable, View, type LayoutChangeEvent } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -82,7 +81,6 @@ function HabitCardComponent({
 
     completionTriggeredRef.current = true;
     completionProgress.value = withSpring(1, COMPLETION_SPRING_CONFIG);
-    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     onCompletionTransition?.(habit.id);
     void onComplete(habit.id);
   }, [completionProgress, habit.completedToday, habit.id, onComplete, onCompletionTransition]);

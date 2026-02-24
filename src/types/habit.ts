@@ -30,13 +30,21 @@ export type HabitState = {
 };
 
 export type HabitActions = {
-  toggleHabitCompletion: (id: Habit['id']) => void;
+  toggleHabitCompletion: (id: Habit['id']) => HabitCompletionTransition | null;
   addHabit: (payload: AddHabitPayload) => void;
   reorderHabits: (fromIndex: number, toIndex: number) => void;
   resetHabits: () => void;
 };
 
 export type HabitStore = HabitState & HabitActions;
+
+export type HabitCompletionTransition = {
+  habitId: Habit['id'];
+  wasCompletedToday: boolean;
+  isCompletedToday: boolean;
+  previousStreak: number;
+  newStreak: number;
+};
 
 export function getCompletedCount(habits: Habit[]): number {
   return habits.filter((habit) => habit.completedToday).length;

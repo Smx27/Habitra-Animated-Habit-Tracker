@@ -1,22 +1,37 @@
 import { selectHabits, useHabitStore } from '@/store/habitStore';
 import type { HabitStore } from '@/types/habit';
+import { triggerMilestoneHaptic, triggerSuccessHaptic } from '@/utils/haptics';
 
 export function useHabitActions() {
   const habits = useHabitStore(selectHabits);
   const toggleHabitCompletion = useHabitStore((state: HabitStore) => state.toggleHabitCompletion);
 
   const handleCompleteHabit = async (id: string) => {
-    toggleHabitCompletion(id);
+    const transition = toggleHabitCompletion(id);
+
+    if (!transition) {
+      return null;
+    }
+
+    if (transition.isCompletedToday) {
+      await triggerSuccessHaptic();
+
+      if (transition.newStreak > 0 && transition.newStreak % 7 === 0) {
+        await triggerMilestoneHaptic();
+      }
+    }
+
+    return transition;
   };
 
   const handleCompleteNextHabit = async () => {
     const nextIncompleteHabit = habits.find((habit) => !habit.completedToday) ?? habits[0];
 
     if (!nextIncompleteHabit) {
-      return;
+      return null;
     }
 
-    await handleCompleteHabit(nextIncompleteHabit.id);
+    return handleCompleteHabit(nextIncompleteHabit.id);
   };
 
   return {

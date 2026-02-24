@@ -7,3 +7,7 @@ export async function triggerSuccessHaptic() {
 export async function triggerImpact() {
   await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 }
+
+export async function triggerMilestoneHaptic() {
+  await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+}
