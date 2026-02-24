@@ -1,7 +1,12 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
 
 import type { Habit, HabitCompletionTransition, HabitStore } from '@/types/habit';
 import { getCompletedCount, getCompletionPercent } from '@/types/habit';
+
+const HABIT_STORE_VERSION = 1;
+const HABIT_STORE_KEY = 'habitra-habits-v1';
 
 const getTodayISODate = () => new Date().toISOString().split('T')[0];
 
@@ -46,72 +51,99 @@ const initialState = {
   habits: initialHabits,
 };
 
-export const useHabitStore = create<HabitStore>((set) => ({
-  ...initialState,
-  toggleHabitCompletion: (id) => {
-    const currentHabits = useHabitStore.getState().habits;
-    const targetHabit = currentHabits.find((habit) => habit.id === id);
+type PersistedHabitState = {
+  habits: Array<Omit<Habit, 'createdAt'> & { createdAt: string }>;
+};
 
-    if (!targetHabit) {
-      return null;
-    }
+const reviveHabitDates = (state: PersistedHabitState | undefined): Pick<HabitStore, 'habits'> => ({
+  habits:
+    state?.habits.map((habit) => ({
+      ...habit,
+      createdAt: new Date(habit.createdAt),
+    })) ?? initialState.habits,
+});
 
-    const today = getTodayISODate();
-    const wasCompletedToday = targetHabit.completedDates.includes(today);
-    const previousStreak = targetHabit.completedDates.length;
-    const isCompletedToday = !wasCompletedToday;
+export const useHabitStore = create<HabitStore>()(
+  persist(
+    (set) => ({
+      ...initialState,
+      toggleHabitCompletion: (id) => {
+        const currentHabits = useHabitStore.getState().habits;
+        const targetHabit = currentHabits.find((habit) => habit.id === id);
 
-    const nextCompletedDates = isCompletedToday
-      ? [...targetHabit.completedDates, today]
-      : targetHabit.completedDates.filter((date) => date !== today);
+        if (!targetHabit) {
+          return null;
+        }
 
-    const transition: HabitCompletionTransition = {
-      habitId: id,
-      wasCompletedToday,
-      isCompletedToday,
-      previousStreak,
-      newStreak: nextCompletedDates.length,
-    };
+        const today = getTodayISODate();
+        const wasCompletedToday = targetHabit.completedDates.includes(today);
+        const previousStreak = targetHabit.completedDates.length;
+        const isCompletedToday = !wasCompletedToday;
 
-    set((state: HabitStore) => ({
-      habits: state.habits.map((habit) => (habit.id === id ? { ...habit, completedDates: nextCompletedDates } : habit)),
-    }));
+        const nextCompletedDates = isCompletedToday
+          ? [...targetHabit.completedDates, today]
+          : targetHabit.completedDates.filter((date) => date !== today);
 
-    return transition;
-  },
-  addHabit: (payload) =>
-    set((state: HabitStore) => ({
-      habits: [
-        ...state.habits,
-        {
-          id: `habit-${Date.now()}`,
-          title: payload.title,
-          color: payload.color,
-          completedDates: [],
-          createdAt: new Date(),
-        },
-      ],
-    })),
-  reorderHabits: (fromIndex, toIndex) =>
-    set((state: HabitStore) => {
-      if (
-        fromIndex < 0 ||
-        toIndex < 0 ||
-        fromIndex >= state.habits.length ||
-        toIndex >= state.habits.length ||
-        fromIndex === toIndex
-      ) {
-        return state;
-      }
+        const transition: HabitCompletionTransition = {
+          habitId: id,
+          wasCompletedToday,
+          isCompletedToday,
+          previousStreak,
+          newStreak: nextCompletedDates.length,
+        };
 
-      const nextHabits = [...state.habits];
-      const [moved] = nextHabits.splice(fromIndex, 1);
-      nextHabits.splice(toIndex, 0, moved);
+        set((state: HabitStore) => ({
+          habits: state.habits.map((habit) => (habit.id === id ? { ...habit, completedDates: nextCompletedDates } : habit)),
+        }));
 
-      return { habits: nextHabits };
+        return transition;
+      },
+      addHabit: (payload) =>
+        set((state: HabitStore) => ({
+          habits: [
+            ...state.habits,
+            {
+              id: `habit-${Date.now()}`,
+              title: payload.title,
+              color: payload.color,
+              completedDates: [],
+              createdAt: new Date(),
+            },
+          ],
+        })),
+      reorderHabits: (fromIndex, toIndex) =>
+        set((state: HabitStore) => {
+          if (
+            fromIndex < 0 ||
+            toIndex < 0 ||
+            fromIndex >= state.habits.length ||
+            toIndex >= state.habits.length ||
+            fromIndex === toIndex
+          ) {
+            return state;
+          }
+
+          const nextHabits = [...state.habits];
+          const [moved] = nextHabits.splice(fromIndex, 1);
+          nextHabits.splice(toIndex, 0, moved);
+
+          return { habits: nextHabits };
+        }),
+      resetHabits: () => set(initialState),
     }),
-  resetHabits: () => set(initialState),
-}));
+    {
+      name: HABIT_STORE_KEY,
+      version: HABIT_STORE_VERSION,
+      storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({ habits: state.habits }),
+      migrate: (persistedState) => reviveHabitDates(persistedState as PersistedHabitState | undefined),
+      merge: (persistedState, currentState) => ({
+        ...currentState,
+        ...reviveHabitDates(persistedState as PersistedHabitState | undefined),
+      }),
+    }
+  )
+);
 
 export const selectHabits = (state: HabitStore) => state.habits;
 export const selectCompletedCount = (state: HabitStore) => getCompletedCount(state.habits);
