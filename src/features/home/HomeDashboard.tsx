@@ -24,6 +24,7 @@ import { EmptyStateCard } from './EmptyStateCard';
 import { HeaderSection } from './HeaderSection';
 import { PremiumOnboarding } from './PremiumOnboarding';
 import { ProgressSection } from './ProgressSection';
+import { StreakHeatmapCalendar } from './StreakHeatmapCalendar';
 
 type HabitListItemProps = {
   habit: Habit;
@@ -179,12 +180,13 @@ export function HomeDashboard() {
       <View className="gap-6 pb-3">
         <HeaderSection completedCount={completedCount} />
         <ProgressSection completedCount={completedCount} completionPercent={completionPercent} />
+        <StreakHeatmapCalendar habits={habits} />
         <Animated.Text style={animatedSectionTitleStyle} className={typography.title}>
           Today&apos;s Rituals
         </Animated.Text>
       </View>
     ),
-    [animatedSectionTitleStyle, completedCount, completionPercent, typography.title],
+    [animatedSectionTitleStyle, completedCount, completionPercent, habits, typography.title],
   );
 
   const handleSaveHabit = useCallback(
