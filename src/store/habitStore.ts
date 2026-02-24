@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import type { Habit, HabitStore } from '@/types/habit';
+import type { Habit, HabitCompletionTransition, HabitStore } from '@/types/habit';
 import { getCompletedCount, getCompletionPercent, HABIT_CATEGORY_COLORS } from '@/types/habit';
 
 const initialHabits: Habit[] = [
@@ -48,12 +48,35 @@ const initialState = {
 
 export const useHabitStore = create<HabitStore>((set) => ({
   ...initialState,
-  toggleHabitCompletion: (id) =>
+  toggleHabitCompletion: (id) => {
+    const currentHabits = useHabitStore.getState().habits;
+    const targetHabit = currentHabits.find((habit) => habit.id === id);
+
+    if (!targetHabit) {
+      return null;
+    }
+
+    const wasCompletedToday = targetHabit.completedToday;
+    const previousStreak = targetHabit.streak;
+    const isCompletedToday = !wasCompletedToday;
+    const newStreak = isCompletedToday ? previousStreak + 1 : Math.max(0, previousStreak - 1);
+
+    const transition: HabitCompletionTransition = {
+      habitId: id,
+      wasCompletedToday,
+      isCompletedToday,
+      previousStreak,
+      newStreak,
+    };
+
     set((state: HabitStore) => ({
       habits: state.habits.map((habit) =>
-        habit.id === id ? { ...habit, completedToday: !habit.completedToday } : habit,
+        habit.id === id ? { ...habit, completedToday: isCompletedToday, streak: newStreak } : habit,
       ),
-    })),
+    }));
+
+    return transition;
+  },
   addHabit: (payload) =>
     set((state: HabitStore) => ({
       habits: [
