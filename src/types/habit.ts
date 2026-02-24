@@ -20,9 +20,9 @@ export type Habit = {
 
 export type AddHabitPayload = {
   title: string;
-  icon?: string;
-  category: HabitCategory;
-  accentColor?: string;
+  icon: string;
+  accentColor: string;
+  category?: HabitCategory;
 };
 
 export type HabitState = {
