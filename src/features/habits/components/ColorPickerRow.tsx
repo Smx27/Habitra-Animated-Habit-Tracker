@@ -1,5 +1,12 @@
-import { memo } from 'react';
+import { memo, useEffect } from 'react';
 import { Pressable, View } from 'react-native';
+import Animated, {
+  Easing,
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { Text } from '@/components/ui';
 import { useThemeTokens } from '@/theme';
@@ -11,6 +18,43 @@ type ColorPickerRowProps = {
   onSelect: (color: string) => void;
 };
 
+type ColorChipProps = {
+  colorValue: string;
+  isSelected: boolean;
+  onSelect: (color: string) => void;
+};
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+const AnimatedView = Animated.View;
+
+const ColorChip = memo(function ColorChip({ colorValue, isSelected, onSelect }: ColorChipProps) {
+  const selectionProgress = useSharedValue(isSelected ? 1 : 0);
+
+  useEffect(() => {
+    selectionProgress.value = withTiming(isSelected ? 1 : 0, {
+      duration: 180,
+      easing: Easing.out(Easing.cubic),
+    });
+  }, [isSelected, selectionProgress]);
+
+  const chipStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: interpolate(selectionProgress.value, [0, 1], [1, 1.08]) }],
+    opacity: interpolate(selectionProgress.value, [0, 1], [0.55, 1]),
+  }));
+
+  const ringStyle = useAnimatedStyle(() => ({
+    opacity: selectionProgress.value,
+    transform: [{ scale: interpolate(selectionProgress.value, [0, 1], [0.8, 1]) }],
+  }));
+
+  return (
+    <AnimatedPressable onPress={() => onSelect(colorValue)} style={chipStyle} className="h-9 w-9 items-center justify-center rounded-full">
+      <AnimatedView style={ringStyle} className="absolute inset-0 rounded-full border-2 border-white/80" />
+      <View style={{ backgroundColor: colorValue }} className="h-5 w-5 rounded-full" />
+    </AnimatedPressable>
+  );
+});
+
 export const ColorPickerRow = memo(function ColorPickerRow({ options, selectedColor, onSelect }: ColorPickerRowProps) {
   const { color, typography } = useThemeTokens();
 
@@ -18,22 +62,9 @@ export const ColorPickerRow = memo(function ColorPickerRow({ options, selectedCo
     <View className="gap-2">
       <Text className={cn(typography.caption, color.textMutedClass)}>Color</Text>
       <View className="flex-row flex-wrap gap-2">
-        {options.map((option) => {
-          const isSelected = option === selectedColor;
-
-          return (
-            <Pressable
-              key={option}
-              onPress={() => onSelect(option)}
-              className={cn(
-                'h-9 w-9 items-center justify-center rounded-full border',
-                isSelected ? 'border-white/70 bg-white/25' : 'border-white/20 bg-white/10',
-              )}
-            >
-              <View style={{ backgroundColor: option }} className="h-4 w-4 rounded-full" />
-            </Pressable>
-          );
-        })}
+        {options.map((option) => (
+          <ColorChip key={option} colorValue={option} isSelected={option === selectedColor} onSelect={onSelect} />
+        ))}
       </View>
     </View>
   );
