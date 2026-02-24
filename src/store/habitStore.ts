@@ -4,7 +4,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { calculateCurrentStreak, isCompletedOnDate, toggleCompletionForDate } from '@/features/habits/utils/streak';
 import type { Habit, HabitCompletionTransition, HabitStore } from '@/types/habit';
-import { getDailyProgress as computeDailyProgress } from '@/types/habit';
+import { getDailyProgress as computeDailyProgress } from '@/features/habits/utils/progress';
 
 const HABIT_STORE_VERSION = 1;
 const HABIT_STORE_KEY = 'habitra-habits-v1';

@@ -10,7 +10,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { HABIT_COLOR_OPTIONS } from '@/constants/habitCreation';
+import { HABIT_COLOR_OPTIONS } from '@/constants/habits';
 import { Text } from '@/components/ui';
 import { useThemeTokens } from '@/theme';
 import { type AddHabitPayload } from '@/types/habit';
