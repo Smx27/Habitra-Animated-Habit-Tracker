@@ -4,6 +4,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import { FlatList, type ListRenderItem, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { CompletionConfetti } from '@/components/CompletionConfetti';
 import { HabitCard } from '@/components/habit/HabitCard';
 import { FAB, Text } from '@/components/ui';
 import { AddHabitModal } from '@/features/habits/AddHabitModal';
@@ -20,9 +21,15 @@ type HabitListItemProps = {
   habit: Habit;
   index: number;
   onCompleteHabit: (habitId: Habit['id']) => void;
+  onCompletionTransition: (habitId: Habit['id']) => void;
 };
 
-const HabitListItem = memo(function HabitListItem({ habit, index, onCompleteHabit }: HabitListItemProps) {
+const HabitListItem = memo(function HabitListItem({
+  habit,
+  index,
+  onCompleteHabit,
+  onCompletionTransition,
+}: HabitListItemProps) {
   return (
     <HabitCard
       habit={habit}
@@ -30,6 +37,7 @@ const HabitListItem = memo(function HabitListItem({ habit, index, onCompleteHabi
       onPress={onCompleteHabit}
       onComplete={onCompleteHabit}
       onToggleCompletion={onCompleteHabit}
+      onCompletionTransition={onCompletionTransition}
     />
   );
 });
@@ -43,6 +51,8 @@ export function HomeDashboard() {
   const { color, spacing, scheme, typography } = useThemeTokens();
   const insets = useSafeAreaInsets();
   const [isAddHabitOpen, setAddHabitOpen] = useState(false);
+  const [confettiVisible, setConfettiVisible] = useState(false);
+  const [confettiPlayKey, setConfettiPlayKey] = useState(0);
 
   const gradientColors =
     scheme === 'dark'
@@ -56,9 +66,21 @@ export function HomeDashboard() {
     [handleCompleteHabit],
   );
 
+  const handleCompletionTransition = useCallback(() => {
+    setConfettiPlayKey((current) => current + 1);
+    setConfettiVisible(true);
+  }, []);
+
   const renderHabitItem = useCallback<ListRenderItem<Habit>>(
-    ({ item, index }) => <HabitListItem habit={item} index={index} onCompleteHabit={handleCompleteHabitPress} />,
-    [handleCompleteHabitPress],
+    ({ item, index }) => (
+      <HabitListItem
+        habit={item}
+        index={index}
+        onCompleteHabit={handleCompleteHabitPress}
+        onCompletionTransition={handleCompletionTransition}
+      />
+    ),
+    [handleCompleteHabitPress, handleCompletionTransition],
   );
 
   const contentContainerStyle = useMemo(
@@ -102,6 +124,12 @@ export function HomeDashboard() {
       />
 
       <FAB accessibilityLabel="Create habit" onPress={() => setAddHabitOpen(true)} />
+
+      <CompletionConfetti
+        visible={confettiVisible}
+        playKey={confettiPlayKey}
+        onAnimationFinish={() => setConfettiVisible(false)}
+      />
 
       <AddHabitModal visible={isAddHabitOpen} onClose={() => setAddHabitOpen(false)} onSave={handleSaveHabit} />
     </View>
