@@ -32,31 +32,3 @@ export type HabitCompletionTransition = {
   previousStreak: number;
   newStreak: number;
 };
-
-export function getCompletedCount(habits: Habit[]): number {
-  const today = new Date().toISOString().split('T')[0];
-  return habits.filter((habit) => habit.completedDates.includes(today)).length;
-}
-
-export function getCompletionPercent(habits: Habit[]): number {
-  if (habits.length === 0) {
-    return 0;
-  }
-
-  return getCompletedCount(habits) / habits.length;
-}
-
-export function getDailyProgress(habits: Habit[], date = new Date().toISOString().split('T')[0]): {
-  completed: number;
-  total: number;
-  percent: number;
-} {
-  const total = habits.length;
-  const completed = habits.filter((habit) => habit.completedDates.includes(date)).length;
-
-  return {
-    completed,
-    total,
-    percent: total === 0 ? 0 : completed / total,
-  };
-}
