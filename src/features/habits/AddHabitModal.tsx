@@ -11,7 +11,8 @@ import Animated, {
 
 import { Text } from '@/components/ui';
 import { useThemeTokens } from '@/theme';
-import { type AddHabitPayload, HABIT_CATEGORY_COLORS, type HabitCategory } from '@/types/habit';
+import { HABIT_COLOR_OPTIONS, HABIT_ICON_OPTIONS } from '@/constants/habitCreation';
+import { type AddHabitPayload } from '@/types/habit';
 import { cn } from '@/utils/cn';
 import { triggerImpact } from '@/utils/haptics';
 
@@ -25,15 +26,6 @@ type AddHabitModalProps = {
   onSave: (payload: AddHabitPayload) => void;
 };
 
-const ICON_OPTIONS = ['✨', '💪', '📚', '🧘', '💧', '🌙', '🏃', '📝'];
-
-const COLOR_OPTIONS: Array<{ category: HabitCategory; color: string; label: string }> = [
-  { category: 'health', color: HABIT_CATEGORY_COLORS.health.accent, label: 'Health' },
-  { category: 'mindfulness', color: HABIT_CATEGORY_COLORS.mindfulness.accent, label: 'Mind' },
-  { category: 'learning', color: HABIT_CATEGORY_COLORS.learning.accent, label: 'Learning' },
-  { category: 'productivity', color: HABIT_CATEGORY_COLORS.productivity.accent, label: 'Work' },
-  { category: 'wellness', color: HABIT_CATEGORY_COLORS.wellness.accent, label: 'Wellness' },
-];
 
 const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
 
@@ -41,16 +33,16 @@ export function AddHabitModal({ visible, onClose, onSave }: AddHabitModalProps) 
   const { color, radius, typography } = useThemeTokens();
   const [isMounted, setIsMounted] = useState(visible);
   const [title, setTitle] = useState('');
-  const [selectedIcon, setSelectedIcon] = useState(ICON_OPTIONS[0]);
-  const [selectedCategory, setSelectedCategory] = useState<HabitCategory>('wellness');
+  const [selectedIcon, setSelectedIcon] = useState<string>(HABIT_ICON_OPTIONS[0]);
+  const [selectedAccentColor, setSelectedAccentColor] = useState<string>(HABIT_COLOR_OPTIONS[0]);
 
   const backdropOpacity = useSharedValue(0);
   const translateY = useSharedValue(520);
 
   const resetForm = useCallback(() => {
     setTitle('');
-    setSelectedIcon(ICON_OPTIONS[0]);
-    setSelectedCategory('wellness');
+    setSelectedIcon(HABIT_ICON_OPTIONS[0]);
+    setSelectedAccentColor(HABIT_COLOR_OPTIONS[0]);
   }, []);
 
   const animateIn = useCallback(() => {
@@ -99,22 +91,23 @@ export function AddHabitModal({ visible, onClose, onSave }: AddHabitModalProps) 
   const handleSave = useCallback(() => {
     const cleanTitle = title.trim();
 
-    if (!cleanTitle) {
+    const normalizedTitle = cleanTitle.replace(/\s+/g, ' ');
+
+    if (!normalizedTitle || !selectedIcon || !selectedAccentColor) {
       return;
     }
 
     void triggerImpact();
 
     onSave({
-      title: cleanTitle,
+      title: normalizedTitle,
       icon: selectedIcon,
-      category: selectedCategory,
-      accentColor: HABIT_CATEGORY_COLORS[selectedCategory].accent,
+      accentColor: selectedAccentColor,
     });
 
     resetForm();
     animateOut(onClose);
-  }, [animateOut, onClose, onSave, resetForm, selectedCategory, selectedIcon, title]);
+  }, [animateOut, onClose, onSave, resetForm, selectedAccentColor, selectedIcon, title]);
 
   const backdropStyle = useAnimatedStyle(() => ({
     opacity: backdropOpacity.value,
@@ -156,8 +149,12 @@ export function AddHabitModal({ visible, onClose, onSave }: AddHabitModalProps) 
             />
           </View>
 
-          <IconPickerRow icons={ICON_OPTIONS} selectedIcon={selectedIcon} onSelect={setSelectedIcon} />
-          <ColorPickerRow options={COLOR_OPTIONS} selectedCategory={selectedCategory} onSelect={setSelectedCategory} />
+          <IconPickerRow icons={[...HABIT_ICON_OPTIONS]} selectedIcon={selectedIcon} onSelect={setSelectedIcon} />
+          <ColorPickerRow
+            options={HABIT_COLOR_OPTIONS}
+            selectedColor={selectedAccentColor}
+            onSelect={setSelectedAccentColor}
+          />
           <SaveHabitButton disabled={isSaveDisabled} onPress={handleSave} />
         </View>
       </Animated.View>
