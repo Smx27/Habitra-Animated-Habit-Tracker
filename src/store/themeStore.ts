@@ -8,14 +8,17 @@ export type ThemeMode = ColorScheme | 'system';
 
 type ThemeStore = {
   themeMode: ThemeMode;
+  hasSeenOnboarding: boolean;
   setThemeMode: (mode: ThemeMode) => void;
   toggleTheme: (systemScheme: ColorScheme) => void;
+  completeOnboarding: () => void;
 };
 
 export const useThemeStore = create<ThemeStore>()(
   persist(
     (set, get) => ({
       themeMode: 'dark',
+      hasSeenOnboarding: false,
       setThemeMode: (themeMode) => set({ themeMode }),
       toggleTheme: (systemScheme) => {
         const currentMode = get().themeMode;
@@ -32,11 +35,12 @@ export const useThemeStore = create<ThemeStore>()(
 
         set({ themeMode: systemScheme === 'dark' ? 'light' : 'dark' });
       },
+      completeOnboarding: () => set({ hasSeenOnboarding: true }),
     }),
     {
       name: 'habitra-theme-mode',
       storage: createJSONStorage(() => AsyncStorage),
-      partialize: (state) => ({ themeMode: state.themeMode }),
+      partialize: (state) => ({ themeMode: state.themeMode, hasSeenOnboarding: state.hasSeenOnboarding }),
     },
   ),
 );

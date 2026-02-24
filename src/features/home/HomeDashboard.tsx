@@ -14,11 +14,15 @@ import { AddHabitModal } from '@/features/habits/AddHabitModal';
 import { calculateCurrentStreak, isCompletedOnDate } from '@/features/habits/utils/streak';
 import { useHabitActions } from '@/hooks/useHabitActions';
 import { selectDailyProgress, selectHabits, useHabitStore } from '@/store/habitStore';
+import { useThemeStore } from '@/store/themeStore';
 import { useThemeTokens } from '@/theme';
 import type { AddHabitPayload, Habit } from '@/types/habit';
 import { cn } from '@/utils/cn';
+import { triggerImpact } from '@/utils/haptics';
 
+import { EmptyStateCard } from './EmptyStateCard';
 import { HeaderSection } from './HeaderSection';
+import { PremiumOnboarding } from './PremiumOnboarding';
 import { ProgressSection } from './ProgressSection';
 
 type HabitListItemProps = {
@@ -27,8 +31,7 @@ type HabitListItemProps = {
   streak: number;
   index: number;
   onOpenHabit: (habitId: Habit['id']) => void;
-  onCompleteHabit: (habitId: Habit['id']) => void;
-  onCompletionTransition: (habitId: Habit['id']) => void;
+  onCompleteHabit: (habitId: Habit['id']) => void | Promise<void>;
 };
 
 const getTodayISODate = () => new Date().toISOString().split('T')[0];
@@ -45,8 +48,7 @@ const HabitListItem = memo(function HabitListItem({
   streak,
   index,
   onOpenHabit,
-  onCompleteHabit,
-  onCompletionTransition,
+  onCompleteHabit
 }: HabitListItemProps) {
   return (
     <HabitCard
@@ -57,7 +59,6 @@ const HabitListItem = memo(function HabitListItem({
       onPress={onOpenHabit}
       onComplete={onCompleteHabit}
       onToggleCompletion={onCompleteHabit}
-      onCompletionTransition={onCompletionTransition}
     />
   );
 });
@@ -75,7 +76,11 @@ export function HomeDashboard() {
   const [confettiVisible, setConfettiVisible] = useState(false);
   const [confettiPlayKey, setConfettiPlayKey] = useState(0);
   const [isHydrating, setHydrating] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const contentOpacity = useSharedValue(0);
+
+  const hasSeenOnboarding = useThemeStore((state) => state.hasSeenOnboarding);
+  const completeOnboarding = useThemeStore((state) => state.completeOnboarding);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -86,6 +91,12 @@ export function HomeDashboard() {
       clearTimeout(timeoutId);
     };
   }, []);
+
+  useEffect(() => {
+    if (!isHydrating && !hasSeenOnboarding) {
+      setShowOnboarding(true);
+    }
+  }, [hasSeenOnboarding, isHydrating]);
 
   useEffect(() => {
     contentOpacity.value = withTiming(isHydrating ? 0 : 1, {
@@ -122,16 +133,16 @@ export function HomeDashboard() {
   );
 
   const handleCompleteHabitPress = useCallback(
-    (habitId: Habit['id']) => {
-      void handleCompleteHabit(habitId);
+    async (habitId: Habit['id']) => {
+      const transition = await handleCompleteHabit(habitId);
+
+      if (transition?.isCompletedToday && transition.newStreak > 0 && transition.newStreak % 7 === 0) {
+        setConfettiPlayKey((current) => current + 1);
+        setConfettiVisible(true);
+      }
     },
     [handleCompleteHabit],
   );
-
-  const handleCompletionTransition = useCallback(() => {
-    setConfettiPlayKey((current) => current + 1);
-    setConfettiVisible(true);
-  }, []);
 
   const renderHabitItem = useCallback<ListRenderItem<Habit>>(
     ({ item, index }) => {
@@ -147,18 +158,17 @@ export function HomeDashboard() {
           index={index}
           onOpenHabit={handleOpenHabit}
           onCompleteHabit={handleCompleteHabitPress}
-          onCompletionTransition={handleCompletionTransition}
         />
       );
     },
-    [handleCompleteHabitPress, handleCompletionTransition, handleOpenHabit],
+    [handleCompleteHabitPress, handleOpenHabit],
   );
 
   const renderSkeletonItem = useCallback<ListRenderItem<string>>(({ index }) => <HabitCardSkeleton index={index} />, []);
 
   const contentContainerStyle = useMemo(
     () => ({
-      paddingTop: insets.top + 16,
+      paddingTop: insets.top + 14,
       paddingBottom: insets.bottom + 112,
     }),
     [insets.bottom, insets.top],
@@ -166,15 +176,15 @@ export function HomeDashboard() {
 
   const headerComponent = useMemo(
     () => (
-      <View className="gap-5 pb-2">
+      <View className="gap-6 pb-3">
         <HeaderSection completedCount={completedCount} />
         <ProgressSection completedCount={completedCount} completionPercent={completionPercent} />
-        <Animated.Text style={animatedSectionTitleStyle} className={typography.subheading}>
-          Habit List
+        <Animated.Text style={animatedSectionTitleStyle} className={typography.title}>
+          Today&apos;s Rituals
         </Animated.Text>
       </View>
     ),
-    [animatedSectionTitleStyle, completedCount, completionPercent, typography.subheading],
+    [animatedSectionTitleStyle, completedCount, completionPercent, typography.title],
   );
 
   const handleSaveHabit = useCallback(
@@ -188,14 +198,14 @@ export function HomeDashboard() {
     <View className="flex-1">
       <StatusBar style={color.statusBarStyle} />
       <AnimatedLinearGradient
-        colors={['#eef2ff', '#e0e7ff', '#dbeafe']}
+        colors={['#f8fbff', '#e8eeff', '#e3edff']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         className="absolute inset-0"
         style={lightGradientStyle}
       />
       <AnimatedLinearGradient
-        colors={['#020617', '#1e1b4b', '#312e81']}
+        colors={['#020617', '#111827', '#1e1b4b']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         className="absolute inset-0"
@@ -228,6 +238,7 @@ export function HomeDashboard() {
           contentContainerStyle={contentContainerStyle}
           ListHeaderComponent={headerComponent}
           renderItem={renderHabitItem}
+          ListEmptyComponent={<EmptyStateCard onCreateHabit={() => setAddHabitOpen(true)} />}
         />
       </Animated.View>
 
@@ -240,6 +251,15 @@ export function HomeDashboard() {
       />
 
       <AddHabitModal visible={isAddHabitOpen} onClose={() => setAddHabitOpen(false)} onSave={handleSaveHabit} />
+
+      <PremiumOnboarding
+        visible={showOnboarding}
+        onStart={() => {
+          void triggerImpact();
+          completeOnboarding();
+          setShowOnboarding(false);
+        }}
+      />
     </View>
   );
 }

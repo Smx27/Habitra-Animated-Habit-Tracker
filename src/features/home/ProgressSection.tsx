@@ -17,16 +17,16 @@ export function ProgressSection({ completedCount, completionPercent }: ProgressS
   const { handleCompleteNextHabit } = useHabitActions();
 
   return (
-    <BlurView intensity={30} tint="default" className={cn('overflow-hidden border border-white/20 p-5', radius.card, color.surfaceClass)}>
-      <View className="gap-4">
-        <View className="gap-1">
-          <Text className={typography.subheading}>Progress</Text>
-          <Text muted>
+    <BlurView intensity={44} tint="default" className={cn('overflow-hidden border border-white/25 p-5', radius.card, color.surfaceClass)}>
+      <View className="gap-5">
+        <View className="gap-1.5">
+          <Text className={cn(typography.title, color.textPrimaryClass)}>Progress</Text>
+          <Text muted className={typography.bodySmall}>
             {completedCount} habits completed
           </Text>
         </View>
         <View className="items-center">
-          <AnimatedProgressRing completionPercent={completionPercent} label="Daily goal" size={132} strokeWidth={11} duration={1000} />
+          <AnimatedProgressRing completionPercent={completionPercent} label="Daily goal" size={134} strokeWidth={11} duration={1000} />
         </View>
         <Button label="Mark one done" onPress={handleCompleteNextHabit} />
       </View>
