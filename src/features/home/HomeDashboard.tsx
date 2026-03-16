@@ -1,3 +1,4 @@
+import { cssInterop } from 'nativewind';
 import { FlashList, type ListRenderItem } from '@shopify/flash-list';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -45,6 +46,10 @@ const SKELETON_CARD_COUNT = 5;
 const SKELETON_IDS = Array.from({ length: SKELETON_CARD_COUNT }, (_, index) => `skeleton-${index}`);
 
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
+
+cssInterop(AnimatedLinearGradient, {
+  className: 'style',
+});
 
 const HabitListItem = memo(function HabitListItem({
   habit,
